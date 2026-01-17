@@ -104,14 +104,22 @@ export default function DatabaseSchemaPage() {
                 <h1 className="text-3xl font-bold">{database.title}</h1>
                 <p className="text-sm text-gray-400 font-mono mt-1">{database.id}</p>
               </div>
-              <a
-                href={database.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                Open in Notion
-              </a>
+              <div className="flex items-center gap-4">
+                <a
+                  href={database.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  Open in Notion
+                </a>
+                <Link
+                  href={`/databases/${database.id}/forms/new`}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Create Form
+                </Link>
+              </div>
             </div>
 
             <h2 className="text-xl font-semibold mb-4">
