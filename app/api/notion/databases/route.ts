@@ -1,7 +1,17 @@
 import { Client } from '@notionhq/client';
 import { NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET() {
+  // Require authentication
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   const notionApiKey = process.env.NOTION_API_KEY;
 
   if (!notionApiKey) {
