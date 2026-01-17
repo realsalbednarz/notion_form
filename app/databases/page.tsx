@@ -70,9 +70,10 @@ export default function DatabasesPage() {
         {!loading && !error && databases.length > 0 && (
           <div className="grid gap-4">
             {databases.map((db) => (
-              <div
+              <Link
                 key={db.id}
-                className="border rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                href={`/databases/${db.id}`}
+                className="block border rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -81,17 +82,12 @@ export default function DatabasesPage() {
                       Last edited: {new Date(db.lastEditedTime).toLocaleDateString()}
                     </p>
                   </div>
-                  <a
-                    href={db.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Open in Notion
-                  </a>
+                  <span className="text-sm text-blue-600">
+                    View Schema &rarr;
+                  </span>
                 </div>
                 <p className="text-xs text-gray-400 mt-2 font-mono">{db.id}</p>
-              </div>
+              </Link>
             ))}
           </div>
         )}
