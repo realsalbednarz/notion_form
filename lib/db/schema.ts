@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, boolean } from 'drizzle-orm/pg-core';
 
 // Users table
 export const users = pgTable('users', {
@@ -57,6 +57,29 @@ export const formSubmissions = pgTable('form_submissions', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Form users (authenticated via email magic link)
+export const formUsers = pgTable('form_users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull().unique(),
+  notionUserId: text('notion_user_id'), // Matched from Notion workspace
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
+  lastNotionCheck: timestamp('last_notion_check'), // When we last verified workspace membership
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Magic link tokens for email authentication
+export const magicLinkTokens = pgTable('magic_link_tokens', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type OAuthToken = typeof oauthTokens.$inferSelect;
@@ -65,3 +88,7 @@ export type FormConfig = typeof formConfigs.$inferSelect;
 export type NewFormConfig = typeof formConfigs.$inferInsert;
 export type FormSubmission = typeof formSubmissions.$inferSelect;
 export type NewFormSubmission = typeof formSubmissions.$inferInsert;
+export type FormUser = typeof formUsers.$inferSelect;
+export type NewFormUser = typeof formUsers.$inferInsert;
+export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
+export type NewMagicLinkToken = typeof magicLinkTokens.$inferInsert;
