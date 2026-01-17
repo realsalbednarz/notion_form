@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import UserMenu from '@/components/UserMenu';
 
 interface Database {
   id: string;
@@ -37,17 +38,18 @@ export default function DatabasesPage() {
   }, []);
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Notion Databases</h1>
-          <Link
-            href="/"
-            className="text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            Back to Home
+    <main className="min-h-screen">
+      <header className="sticky top-0 bg-white/80 backdrop-blur border-b z-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between">
+          <Link href="/" className="font-semibold">
+            Notion Form Builder
           </Link>
+          <UserMenu />
         </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto p-4 sm:p-8">
+        <h1 className="text-3xl font-bold mb-8">Databases</h1>
 
         {loading && (
           <div className="flex items-center justify-center py-12">
