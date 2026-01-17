@@ -22,6 +22,7 @@ interface Database {
 interface FieldConfigState extends FieldConfig {
   enabled: boolean;
   originalName: string;
+  options?: { id: string; name: string; color: string }[];
 }
 
 const TYPE_BADGES: Record<string, string> = {
@@ -88,6 +89,7 @@ export default function NewFormPage() {
           required: prop.type === 'title',
           editable: !READ_ONLY_TYPES.includes(prop.type),
           visible: true,
+          options: prop.options,
         }));
 
         setFields(initialFields);
@@ -117,17 +119,25 @@ export default function NewFormPage() {
 
   const enabledFields = fields.filter(f => f.enabled);
 
+  const getFormConfig = () => ({
+    name: formName,
+    description: formDescription,
+    databaseId: params.id,
+    fields: enabledFields.map(({ enabled, originalName, ...field }) => field),
+  });
+
   const handleSave = () => {
-    const config = {
-      name: formName,
-      description: formDescription,
-      databaseId: params.id,
-      fields: enabledFields.map(({ enabled, originalName, ...field }) => field),
-    };
+    const config = getFormConfig();
 
     // For now, just log the config - we'll save to DB later
     console.log('Form config:', config);
     alert('Form configuration saved! (Check console for details)\n\nNote: Database persistence coming in a future update.');
+  };
+
+  const handlePreview = () => {
+    const config = getFormConfig();
+    sessionStorage.setItem('formPreview', JSON.stringify(config));
+    window.open('/forms/preview', '_blank');
   };
 
   return (
@@ -308,13 +318,22 @@ export default function NewFormPage() {
               <div className="bg-white rounded-lg border p-6 sticky top-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold">Preview</h2>
-                  <button
-                    onClick={handleSave}
-                    disabled={enabledFields.length === 0 || !formName.trim()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Save Form
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handlePreview}
+                      disabled={enabledFields.length === 0 || !formName.trim()}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Test Form
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={enabledFields.length === 0 || !formName.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Save Form
+                    </button>
+                  </div>
                 </div>
 
                 {enabledFields.length === 0 ? (
