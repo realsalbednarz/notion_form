@@ -13,11 +13,20 @@ interface FormConfig {
   fields: FieldConfig[];
 }
 
+interface SubmissionResult {
+  mode: 'preview' | 'live';
+  data: Record<string, any>;
+  pageId?: string;
+  pageUrl?: string;
+  error?: string;
+}
+
 export default function FormPreviewPage() {
   const router = useRouter();
   const [formConfig, setFormConfig] = useState<FormConfig | null>(null);
+  const [liveMode, setLiveMode] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [submittedData, setSubmittedData] = useState<Record<string, any> | null>(null);
+  const [result, setResult] = useState<SubmissionResult | null>(null);
 
   useEffect(() => {
     // Load form config from sessionStorage
@@ -32,15 +41,58 @@ export default function FormPreviewPage() {
   }, []);
 
   const handleSubmit = async (data: Record<string, any>) => {
-    // For preview, just show the submitted data
     console.log('Form submitted:', data);
-    setSubmittedData(data);
-    setSubmitted(true);
+
+    if (!liveMode) {
+      // Preview mode - just show the data
+      setResult({ mode: 'preview', data });
+      setSubmitted(true);
+      return;
+    }
+
+    // Live mode - submit to Notion
+    try {
+      const fields = formConfig!.fields.map(field => ({
+        propertyId: field.notionPropertyId,
+        propertyType: field.notionPropertyType,
+        value: data[field.notionPropertyId],
+      }));
+
+      const response = await fetch('/api/notion/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          databaseId: formConfig!.databaseId,
+          fields,
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Failed to create page');
+      }
+
+      setResult({
+        mode: 'live',
+        data,
+        pageId: responseData.pageId,
+        pageUrl: responseData.url,
+      });
+      setSubmitted(true);
+    } catch (error) {
+      setResult({
+        mode: 'live',
+        data,
+        error: error instanceof Error ? error.message : 'An error occurred',
+      });
+      setSubmitted(true);
+    }
   };
 
   const handleReset = () => {
     setSubmitted(false);
-    setSubmittedData(null);
+    setResult(null);
   };
 
   if (!formConfig) {
@@ -66,10 +118,32 @@ export default function FormPreviewPage() {
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-              Preview Mode
-            </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLiveMode(false)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-l-lg border ${
+                !liveMode
+                  ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => setLiveMode(true)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-r-lg border -ml-3 ${
+                liveMode
+                  ? 'bg-green-100 text-green-800 border-green-300'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Live Mode
+            </button>
+            {liveMode && (
+              <span className="text-xs text-green-600 font-medium">
+                Submissions will create real Notion pages
+              </span>
+            )}
           </div>
           <button
             onClick={() => router.back()}
@@ -80,26 +154,69 @@ export default function FormPreviewPage() {
         </div>
 
         <div className="bg-white rounded-lg border shadow-sm p-6">
-          {submitted ? (
+          {submitted && result ? (
             <div className="space-y-6">
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+              {result.error ? (
+                // Error state
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Submission Failed</h2>
+                  <p className="text-red-600 mt-2">{result.error}</p>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Form Submitted!</h2>
-                <p className="text-gray-600 mt-2">
-                  This is a preview. In production, data would be sent to Notion.
-                </p>
-              </div>
+              ) : result.mode === 'live' ? (
+                // Live mode success
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Page Created!</h2>
+                  <p className="text-gray-600 mt-2">
+                    Your submission has been added to Notion.
+                  </p>
+                  {result.pageUrl && (
+                    <a
+                      href={result.pageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Open in Notion &rarr;
+                    </a>
+                  )}
+                </div>
+              ) : (
+                // Preview mode success
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Preview Submitted</h2>
+                  <p className="text-gray-600 mt-2">
+                    This is a preview. Switch to Live Mode to create real Notion pages.
+                  </p>
+                </div>
+              )}
 
               <div className="border rounded-lg p-4 bg-gray-50">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Submitted Data:</h3>
                 <pre className="text-xs bg-gray-900 text-green-400 p-4 rounded overflow-auto">
-                  {JSON.stringify(submittedData, null, 2)}
+                  {JSON.stringify(result.data, null, 2)}
                 </pre>
               </div>
+
+              {result.pageId && (
+                <div className="text-sm text-gray-500">
+                  Page ID: <code className="bg-gray-100 px-2 py-0.5 rounded">{result.pageId}</code>
+                </div>
+              )}
 
               <button
                 onClick={handleReset}
@@ -114,6 +231,7 @@ export default function FormPreviewPage() {
               description={formConfig.description}
               fields={formConfig.fields}
               onSubmit={handleSubmit}
+              submitLabel={liveMode ? 'Submit to Notion' : 'Submit Preview'}
             />
           )}
         </div>
