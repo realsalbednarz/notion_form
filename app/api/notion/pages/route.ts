@@ -1,6 +1,7 @@
 import { Client } from '@notionhq/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { getCurrentFormUser } from '@/lib/form-auth';
 
 interface FieldSubmission {
   propertyId: string;
@@ -104,9 +105,11 @@ function convertToNotionProperty(type: string, value: any): any {
 }
 
 export async function POST(request: NextRequest) {
-  // Require authentication
-  const user = await getCurrentUser();
-  if (!user) {
+  // Require authentication (either admin user or form user)
+  const adminUser = await getCurrentUser();
+  const formUser = await getCurrentFormUser();
+
+  if (!adminUser && !formUser) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }

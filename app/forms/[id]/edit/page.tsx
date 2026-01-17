@@ -19,6 +19,17 @@ interface Database {
   properties: Property[];
 }
 
+interface FormConfigData {
+  id: string;
+  name: string;
+  description: string | null;
+  databaseId: string;
+  mode: string;
+  config: {
+    fields: FieldConfig[];
+  };
+}
+
 interface FieldConfigState extends FieldConfig {
   enabled: boolean;
   originalName: string;
@@ -49,13 +60,13 @@ const TYPE_BADGES: Record<string, string> = {
   unique_id: 'bg-gray-100 text-gray-800',
 };
 
-// Read-only property types that can't be edited in forms
 const READ_ONLY_TYPES = ['formula', 'rollup', 'created_time', 'created_by', 'last_edited_time', 'last_edited_by', 'unique_id'];
 
-export default function NewFormPage() {
+export default function EditFormPage() {
   const params = useParams();
   const router = useRouter();
   const [database, setDatabase] = useState<Database | null>(null);
+  const [formConfig, setFormConfig] = useState<FormConfigData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,32 +77,62 @@ export default function NewFormPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function fetchDatabase() {
+    async function fetchData() {
       try {
-        const response = await fetch(`/api/notion/databases/${params.id}`);
-        const data = await response.json();
+        // First fetch the form config
+        const formResponse = await fetch(`/api/forms/${params.id}`);
+        const formData = await formResponse.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch database');
+        if (!formResponse.ok) {
+          if (formResponse.status === 401) {
+            router.push('/login');
+            return;
+          }
+          throw new Error(formData.error || 'Failed to fetch form');
         }
 
-        setDatabase(data);
-        setFormName(`${data.title} Form`);
+        setFormConfig(formData.form);
+        setFormName(formData.form.name);
+        setFormDescription(formData.form.description || '');
 
-        // Initialize field configs from database properties
-        const initialFields: FieldConfigState[] = data.properties.map((prop: Property) => ({
-          enabled: prop.type === 'title', // Enable title by default
-          originalName: prop.name,
-          notionPropertyId: prop.id,
-          notionPropertyType: prop.type,
-          label: prop.name,
-          placeholder: '',
-          helpText: '',
-          required: prop.type === 'title',
-          editable: !READ_ONLY_TYPES.includes(prop.type),
-          visible: true,
-          options: prop.options,
-        }));
+        // Then fetch the database schema
+        const dbResponse = await fetch(`/api/notion/databases/${formData.form.databaseId}`);
+        const dbData = await dbResponse.json();
+
+        if (!dbResponse.ok) {
+          throw new Error(dbData.error || 'Failed to fetch database');
+        }
+
+        setDatabase(dbData);
+
+        // Merge database properties with saved form config
+        const savedFieldIds = new Set(formData.form.config.fields.map((f: FieldConfig) => f.notionPropertyId));
+        const savedFieldMap = new Map(formData.form.config.fields.map((f: FieldConfig) => [f.notionPropertyId, f]));
+
+        const initialFields: FieldConfigState[] = dbData.properties.map((prop: Property) => {
+          const savedField = savedFieldMap.get(prop.id);
+          if (savedField) {
+            return {
+              ...savedField,
+              enabled: true,
+              originalName: prop.name,
+              options: prop.options,
+            };
+          }
+          return {
+            enabled: false,
+            originalName: prop.name,
+            notionPropertyId: prop.id,
+            notionPropertyType: prop.type,
+            label: prop.name,
+            placeholder: '',
+            helpText: '',
+            required: false,
+            editable: !READ_ONLY_TYPES.includes(prop.type),
+            visible: true,
+            options: prop.options,
+          };
+        });
 
         setFields(initialFields);
       } catch (err) {
@@ -102,9 +143,9 @@ export default function NewFormPage() {
     }
 
     if (params.id) {
-      fetchDatabase();
+      fetchData();
     }
-  }, [params.id]);
+  }, [params.id, router]);
 
   const toggleField = (propertyId: string) => {
     setFields(fields.map(f =>
@@ -123,26 +164,24 @@ export default function NewFormPage() {
   const getFormConfig = () => ({
     name: formName,
     description: formDescription,
-    databaseId: params.id,
-    fields: enabledFields.map(({ enabled, originalName, ...field }) => field),
+    databaseId: formConfig?.databaseId,
+    fields: enabledFields.map(({ enabled, originalName, options, ...field }) => field),
   });
 
   const handleSave = async () => {
-    const formConfig = getFormConfig();
+    const updatedConfig = getFormConfig();
     setSaving(true);
 
     try {
-      const response = await fetch('/api/forms', {
-        method: 'POST',
+      const response = await fetch(`/api/forms/${params.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formConfig.name,
-          description: formConfig.description,
-          databaseId: formConfig.databaseId,
-          mode: 'create',
+          name: updatedConfig.name,
+          description: updatedConfig.description,
           config: {
-            databaseId: formConfig.databaseId,
-            fields: formConfig.fields,
+            databaseId: updatedConfig.databaseId,
+            fields: updatedConfig.fields,
             filters: [],
             sorts: [],
             pageSize: 20,
@@ -158,7 +197,6 @@ export default function NewFormPage() {
         throw new Error(data.error || 'Failed to save form');
       }
 
-      // Redirect to the forms listing page
       router.push('/forms');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save form');
@@ -178,10 +216,10 @@ export default function NewFormPage() {
       <div className="max-w-6xl mx-auto p-8">
         <div className="mb-6">
           <Link
-            href={`/databases/${params.id}`}
+            href="/forms"
             className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
           >
-            &larr; Back to Database
+            &larr; Back to Forms
           </Link>
         </div>
 
@@ -202,7 +240,7 @@ export default function NewFormPage() {
             {/* Left Panel - Configuration */}
             <div>
               <div className="bg-white rounded-lg border p-6 mb-6">
-                <h1 className="text-2xl font-bold mb-6">Create Form</h1>
+                <h1 className="text-2xl font-bold mb-6">Edit Form</h1>
 
                 <div className="space-y-4">
                   <div>
@@ -364,7 +402,7 @@ export default function NewFormPage() {
                       disabled={enabledFields.length === 0 || !formName.trim() || saving}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {saving ? 'Saving...' : 'Save Form'}
+                      {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </div>
