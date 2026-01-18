@@ -5,6 +5,23 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TopNav from '@/components/TopNav';
 import { FieldConfig } from '@/types/form';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Property {
   id: string;
@@ -65,6 +82,220 @@ const TYPE_BADGES: Record<string, string> = {
 
 const READ_ONLY_TYPES = ['formula', 'rollup', 'created_time', 'created_by', 'last_edited_time', 'last_edited_by', 'unique_id'];
 
+// Sortable field item component
+function SortableFieldItem({
+  field,
+  expanded,
+  onToggle,
+  onExpand,
+  onUpdate,
+}: {
+  field: FieldConfigState;
+  expanded: boolean;
+  onToggle: () => void;
+  onExpand: () => void;
+  onUpdate: (updates: Partial<FieldConfigState>) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.notionPropertyId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="border border-blue-300 bg-blue-50/50 rounded-lg transition-all"
+    >
+      <div className="flex items-center gap-3 p-3">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded touch-none"
+          title="Drag to reorder"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </button>
+        <input
+          type="checkbox"
+          checked={true}
+          onChange={onToggle}
+          className="h-4 w-4 text-blue-600 rounded"
+        />
+        <span className="font-medium flex-1">{field.originalName}</span>
+        <span
+          className={`px-2 py-0.5 rounded text-xs font-medium ${
+            TYPE_BADGES[field.notionPropertyType] || 'bg-gray-100 text-gray-800'
+          }`}
+        >
+          {field.notionPropertyType}
+        </span>
+        <button
+          onClick={onExpand}
+          className="text-gray-400 hover:text-gray-600 px-2"
+        >
+          {expanded ? '▼' : '▶'}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t bg-white space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Label
+            </label>
+            <input
+              type="text"
+              value={field.label}
+              onChange={(e) => onUpdate({ label: e.target.value })}
+              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Placeholder
+            </label>
+            <input
+              type="text"
+              value={field.placeholder || ''}
+              onChange={(e) => onUpdate({ placeholder: e.target.value })}
+              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Help Text
+            </label>
+            <input
+              type="text"
+              value={field.helpText || ''}
+              onChange={(e) => onUpdate({ helpText: e.target.value })}
+              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={field.required}
+                onChange={(e) => onUpdate({ required: e.target.checked })}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              Required
+            </label>
+
+            {!READ_ONLY_TYPES.includes(field.notionPropertyType) && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={field.visible}
+                  onChange={(e) => onUpdate({ visible: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 rounded"
+                />
+                Visible
+              </label>
+            )}
+          </div>
+
+          <div className="border-t pt-3 mt-3">
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Default Value
+            </label>
+            <select
+              value={field.defaultValueType || 'none'}
+              onChange={(e) => onUpdate({
+                defaultValueType: e.target.value as any,
+                defaultValueStatic: e.target.value === 'static' ? field.defaultValueStatic : undefined
+              })}
+              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="none">No default</option>
+              <option value="static">Static value</option>
+              {field.notionPropertyType === 'people' && (
+                <option value="current_user">Current user</option>
+              )}
+              {field.notionPropertyType === 'date' && (
+                <>
+                  <option value="current_date">Current date</option>
+                  <option value="current_time">Current date & time</option>
+                </>
+              )}
+            </select>
+
+            {field.defaultValueType === 'static' && (
+              <input
+                type={field.notionPropertyType === 'number' ? 'number' : 'text'}
+                value={field.defaultValueStatic || ''}
+                onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                placeholder="Enter default value"
+                className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+              />
+            )}
+
+            {field.defaultValueType === 'current_user' && (
+              <p className="text-xs text-gray-500 mt-1">Will be set to the logged-in user</p>
+            )}
+            {field.defaultValueType === 'current_date' && (
+              <p className="text-xs text-gray-500 mt-1">Will be set to today's date</p>
+            )}
+            {field.defaultValueType === 'current_time' && (
+              <p className="text-xs text-gray-500 mt-1">Will be set to current date and time</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Available (non-selected) field item
+function AvailableFieldItem({
+  field,
+  onToggle,
+}: {
+  field: FieldConfigState;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className="border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-all"
+      onClick={onToggle}
+    >
+      <div className="flex items-center gap-3 p-3">
+        <input
+          type="checkbox"
+          checked={false}
+          onChange={() => {}}
+          className="h-4 w-4 text-blue-600 rounded"
+        />
+        <span className="font-medium flex-1 text-gray-600">{field.originalName}</span>
+        <span
+          className={`px-2 py-0.5 rounded text-xs font-medium ${
+            TYPE_BADGES[field.notionPropertyType] || 'bg-gray-100 text-gray-800'
+          }`}
+        >
+          {field.notionPropertyType}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function EditFormPage() {
   const params = useParams();
   const router = useRouter();
@@ -78,11 +309,18 @@ export default function EditFormPage() {
   const [fields, setFields] = useState<FieldConfigState[]>([]);
   const [expandedField, setExpandedField] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showSchema, setShowSchema] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // First fetch the form config
         const formResponse = await fetch(`/api/forms/${params.id}`);
         const formData = await formResponse.json();
 
@@ -98,7 +336,6 @@ export default function EditFormPage() {
         setFormName(formData.form.name);
         setFormDescription(formData.form.description || '');
 
-        // Then fetch the database schema
         const dbResponse = await fetch(`/api/notion/databases/${formData.form.databaseId}`);
         const dbData = await dbResponse.json();
 
@@ -108,21 +345,28 @@ export default function EditFormPage() {
 
         setDatabase(dbData);
 
-        // Merge database properties with saved form config
-        const savedFieldIds = new Set(formData.form.config.fields.map((f: FieldConfig) => f.notionPropertyId));
-        const savedFieldMap = new Map(formData.form.config.fields.map((f: FieldConfig) => [f.notionPropertyId, f]));
+        // Build enabled fields in saved order, then disabled fields
+        const savedFields = formData.form.config.fields;
+        const savedFieldMap = new Map<string, FieldConfig>(savedFields.map((f: FieldConfig) => [f.notionPropertyId, f]));
+        const dbPropMap = new Map<string, Property>(dbData.properties.map((p: Property) => [p.id, p]));
 
-        const initialFields: FieldConfigState[] = dbData.properties.map((prop: Property) => {
-          const savedField = savedFieldMap.get(prop.id);
-          if (savedField) {
+        // Enabled fields in saved order
+        const enabledFields: FieldConfigState[] = savedFields
+          .filter((sf: FieldConfig) => dbPropMap.has(sf.notionPropertyId))
+          .map((sf: FieldConfig) => {
+            const prop = dbPropMap.get(sf.notionPropertyId) as Property;
             return {
-              ...savedField,
+              ...sf,
               enabled: true,
               originalName: prop.name,
               options: prop.options,
             };
-          }
-          return {
+          });
+
+        // Disabled fields (not in saved config)
+        const disabledFields: FieldConfigState[] = dbData.properties
+          .filter((prop: Property) => !savedFieldMap.has(prop.id))
+          .map((prop: Property) => ({
             enabled: false,
             originalName: prop.name,
             notionPropertyId: prop.id,
@@ -134,10 +378,9 @@ export default function EditFormPage() {
             editable: !READ_ONLY_TYPES.includes(prop.type),
             visible: true,
             options: prop.options,
-          };
-        });
+          }));
 
-        setFields(initialFields);
+        setFields([...enabledFields, ...disabledFields]);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -149,6 +392,9 @@ export default function EditFormPage() {
       fetchData();
     }
   }, [params.id, router]);
+
+  const enabledFields = fields.filter(f => f.enabled);
+  const disabledFields = fields.filter(f => !f.enabled);
 
   const toggleField = (propertyId: string) => {
     setFields(fields.map(f =>
@@ -162,30 +408,23 @@ export default function EditFormPage() {
     ));
   };
 
-  const moveFieldUp = (propertyId: string) => {
-    const index = fields.findIndex(f => f.notionPropertyId === propertyId);
-    if (index <= 0) return;
-    const newFields = [...fields];
-    [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
-    setFields(newFields);
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const moveFieldDown = (propertyId: string) => {
-    const index = fields.findIndex(f => f.notionPropertyId === propertyId);
-    if (index < 0 || index >= fields.length - 1) return;
-    const newFields = [...fields];
-    [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
-    setFields(newFields);
-  };
+    if (over && active.id !== over.id) {
+      const oldIndex = enabledFields.findIndex(f => f.notionPropertyId === active.id);
+      const newIndex = enabledFields.findIndex(f => f.notionPropertyId === over.id);
 
-  const enabledFields = fields.filter(f => f.enabled);
+      const reorderedEnabled = arrayMove(enabledFields, oldIndex, newIndex);
+      setFields([...reorderedEnabled, ...disabledFields]);
+    }
+  };
 
   const getFormConfig = () => ({
     name: formName,
     description: formDescription,
     databaseId: formConfig?.databaseId,
     fields: enabledFields.map(({ enabled, originalName, defaultValueType, defaultValueStatic, options, ...field }) => {
-      // Convert defaultValue to the expected format
       let defaultValue = undefined;
       if (defaultValueType === 'static' && defaultValueStatic) {
         defaultValue = { type: 'static' as const, value: defaultValueStatic };
@@ -243,8 +482,6 @@ export default function EditFormPage() {
     window.open('/forms/preview', '_blank');
   };
 
-  const [showSchema, setShowSchema] = useState(false);
-
   return (
     <main className="min-h-screen bg-gray-50">
       <TopNav />
@@ -268,7 +505,6 @@ export default function EditFormPage() {
           )}
         </div>
 
-        {/* Collapsible Schema View */}
         {showSchema && database && (
           <div className="mb-6 bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between mb-3">
@@ -349,188 +585,66 @@ export default function EditFormPage() {
               </div>
 
               <div className="bg-white rounded-lg border p-6">
+                {/* Selected Fields - Draggable */}
                 <h2 className="text-lg font-semibold mb-4">
-                  Fields ({enabledFields.length} selected)
+                  Selected Fields ({enabledFields.length})
                 </h2>
 
-                <div className="space-y-2">
-                  {fields.map((field) => (
-                    <div
-                      key={field.notionPropertyId}
-                      className={`border rounded-lg transition-all ${
-                        field.enabled ? 'border-blue-300 bg-blue-50/50' : 'border-gray-200'
-                      }`}
+                {enabledFields.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-lg mb-6">
+                    Select fields from below to add to your form
+                  </div>
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={enabledFields.map(f => f.notionPropertyId)}
+                      strategy={verticalListSortingStrategy}
                     >
-                      <div
-                        className="flex items-center gap-3 p-3 cursor-pointer"
-                        onClick={() => toggleField(field.notionPropertyId)}
-                      >
-                        {field.enabled && (
-                          <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => moveFieldUp(field.notionPropertyId)}
-                              className="text-gray-400 hover:text-gray-600 p-0.5 hover:bg-gray-100 rounded"
-                              title="Move up"
-                            >
-                              ▲
-                            </button>
-                            <button
-                              onClick={() => moveFieldDown(field.notionPropertyId)}
-                              className="text-gray-400 hover:text-gray-600 p-0.5 hover:bg-gray-100 rounded"
-                              title="Move down"
-                            >
-                              ▼
-                            </button>
-                          </div>
-                        )}
-                        <input
-                          type="checkbox"
-                          checked={field.enabled}
-                          onChange={() => {}}
-                          className="h-4 w-4 text-blue-600 rounded"
-                        />
-                        <span className="font-medium flex-1">{field.originalName}</span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            TYPE_BADGES[field.notionPropertyType] || 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {field.notionPropertyType}
-                        </span>
-                        {field.enabled && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setExpandedField(
-                                expandedField === field.notionPropertyId ? null : field.notionPropertyId
-                              );
-                            }}
-                            className="text-gray-400 hover:text-gray-600 px-2"
-                          >
-                            {expandedField === field.notionPropertyId ? '▼' : '▶'}
-                          </button>
-                        )}
+                      <div className="space-y-2 mb-6">
+                        {enabledFields.map((field) => (
+                          <SortableFieldItem
+                            key={field.notionPropertyId}
+                            field={field}
+                            expanded={expandedField === field.notionPropertyId}
+                            onToggle={() => toggleField(field.notionPropertyId)}
+                            onExpand={() => setExpandedField(
+                              expandedField === field.notionPropertyId ? null : field.notionPropertyId
+                            )}
+                            onUpdate={(updates) => updateField(field.notionPropertyId, updates)}
+                          />
+                        ))}
                       </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
 
-                      {field.enabled && expandedField === field.notionPropertyId && (
-                        <div className="px-3 pb-3 pt-1 border-t bg-white space-y-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Label
-                            </label>
-                            <input
-                              type="text"
-                              value={field.label}
-                              onChange={(e) => updateField(field.notionPropertyId, { label: e.target.value })}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Placeholder
-                            </label>
-                            <input
-                              type="text"
-                              value={field.placeholder || ''}
-                              onChange={(e) => updateField(field.notionPropertyId, { placeholder: e.target.value })}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Help Text
-                            </label>
-                            <input
-                              type="text"
-                              value={field.helpText || ''}
-                              onChange={(e) => updateField(field.notionPropertyId, { helpText: e.target.value })}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={field.required}
-                                onChange={(e) => updateField(field.notionPropertyId, { required: e.target.checked })}
-                                className="h-4 w-4 text-blue-600 rounded"
-                              />
-                              Required
-                            </label>
-
-                            {!READ_ONLY_TYPES.includes(field.notionPropertyType) && (
-                              <label className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={field.visible}
-                                  onChange={(e) => updateField(field.notionPropertyId, { visible: e.target.checked })}
-                                  className="h-4 w-4 text-blue-600 rounded"
-                                />
-                                Visible
-                              </label>
-                            )}
-                          </div>
-
-                          {/* Default Value Configuration */}
-                          <div className="border-t pt-3 mt-3">
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Default Value
-                            </label>
-                            <select
-                              value={field.defaultValueType || 'none'}
-                              onChange={(e) => updateField(field.notionPropertyId, {
-                                defaultValueType: e.target.value as any,
-                                defaultValueStatic: e.target.value === 'static' ? field.defaultValueStatic : undefined
-                              })}
-                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
-                            >
-                              <option value="none">No default</option>
-                              <option value="static">Static value</option>
-                              {field.notionPropertyType === 'people' && (
-                                <option value="current_user">Current user</option>
-                              )}
-                              {field.notionPropertyType === 'date' && (
-                                <>
-                                  <option value="current_date">Current date</option>
-                                  <option value="current_time">Current date & time</option>
-                                </>
-                              )}
-                            </select>
-
-                            {field.defaultValueType === 'static' && (
-                              <input
-                                type={field.notionPropertyType === 'number' ? 'number' : 'text'}
-                                value={field.defaultValueStatic || ''}
-                                onChange={(e) => updateField(field.notionPropertyId, { defaultValueStatic: e.target.value })}
-                                placeholder="Enter default value"
-                                className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
-                              />
-                            )}
-
-                            {field.defaultValueType === 'current_user' && (
-                              <p className="text-xs text-gray-500 mt-1">Will be set to the logged-in user</p>
-                            )}
-                            {field.defaultValueType === 'current_date' && (
-                              <p className="text-xs text-gray-500 mt-1">Will be set to today's date</p>
-                            )}
-                            {field.defaultValueType === 'current_time' && (
-                              <p className="text-xs text-gray-500 mt-1">Will be set to current date and time</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                {/* Available Fields */}
+                {disabledFields.length > 0 && (
+                  <>
+                    <h3 className="text-sm font-medium text-gray-500 mb-3 mt-6">
+                      Available Fields ({disabledFields.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {disabledFields.map((field) => (
+                        <AvailableFieldItem
+                          key={field.notionPropertyId}
+                          field={field}
+                          onToggle={() => toggleField(field.notionPropertyId)}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Right Panel - Preview */}
             <div>
-              <div className="bg-white rounded-lg border p-6 sticky top-8">
+              <div className="bg-white rounded-lg border p-6 sticky top-20">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold">Preview</h2>
                   <div className="flex gap-2">
