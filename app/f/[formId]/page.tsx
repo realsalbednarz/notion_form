@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import FormRenderer from '@/components/FormRenderer';
 import ListRenderer from '@/components/ListRenderer';
 import SlideOver from '@/components/SlideOver';
+import CommentsPanel from '@/components/CommentsPanel';
 import { FieldConfig, DesignTimeFilter, ListConfig } from '@/types/form';
 
 interface FormConfig {
@@ -376,14 +377,17 @@ export default function PublicFormPage() {
               <div className="text-gray-500">Loading...</div>
             </div>
           ) : editingRecord ? (
-            <FormRenderer
-              name=""
-              fields={form.config.fields.filter(f => f.visible !== false)}
-              onSubmit={handleEdit}
-              submitLabel="Save Changes"
-              currentUser={currentUser || undefined}
-              initialData={getEditInitialData()}
-            />
+            <>
+              <FormRenderer
+                name=""
+                fields={form.config.fields.filter(f => f.visible !== false)}
+                onSubmit={handleEdit}
+                submitLabel="Save Changes"
+                currentUser={currentUser || undefined}
+                initialData={getEditInitialData()}
+              />
+              <CommentsPanel pageId={editingRecord.id} />
+            </>
           ) : null}
         </SlideOver>
       </main>

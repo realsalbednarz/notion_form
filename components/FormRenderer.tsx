@@ -201,7 +201,6 @@ export default function FormRenderer({
 
     switch (field.notionPropertyType) {
       case 'title':
-      case 'rich_text':
         return (
           <input
             type="text"
@@ -210,6 +209,18 @@ export default function FormRenderer({
             placeholder={field.placeholder}
             disabled={isDisabled}
             className={inputClasses}
+          />
+        );
+
+      case 'rich_text':
+        return (
+          <textarea
+            value={value}
+            onChange={(e) => updateField(field.notionPropertyId, e.target.value)}
+            placeholder={field.placeholder}
+            disabled={isDisabled}
+            rows={3}
+            className={`${inputClasses} resize-y min-h-[80px]`}
           />
         );
 

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FieldConfig, DesignTimeFilter } from '@/types/form';
+import { CommentPreview } from './CommentsPanel';
 
 interface ListColumn {
   propertyId: string;
@@ -13,6 +14,30 @@ interface RowData {
   id: string;
   url: string;
   properties: Record<string, { type: string; value: any }>;
+}
+
+// Comment count badge component
+function CommentCountBadge({ pageId }: { pageId: string }) {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/notion/comments?page_id=${pageId}`)
+      .then(res => res.json())
+      .then(data => setCount(data.count || 0))
+      .catch(() => setCount(0));
+  }, [pageId]);
+
+  if (count === null) return null;
+  if (count === 0) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-gray-500" title={`${count} comment${count !== 1 ? 's' : ''}`}>
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      {count}
+    </span>
+  );
 }
 
 interface ListRendererProps {
@@ -359,45 +384,59 @@ export default function ListRenderer({
               <tbody className="bg-white divide-y divide-gray-200">
                 {rows.map((row) => {
                   const isExpanded = expandedRows.has(row.id);
+                  const colSpan = columns.length + 1 + (allowEdit ? 1 : 0);
                   return (
-                    <tr key={row.id} className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
-                      <td className="px-2 py-3 w-10">
-                        <button
-                          onClick={() => toggleRowExpanded(row.id)}
-                          className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-                          title={isExpanded ? 'Collapse row' : 'Expand row'}
-                        >
-                          <svg
-                            className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M6 4l8 6-8 6V4z" />
-                          </svg>
-                        </button>
-                      </td>
-                      {allowEdit && onEditClick && (
-                        <td className="px-2 py-3 w-16">
-                          <button
-                            onClick={() => onEditClick(row.id)}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Edit
-                          </button>
+                    <React.Fragment key={row.id}>
+                      <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
+                        <td className="px-2 py-3 w-10">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => toggleRowExpanded(row.id)}
+                              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                              title={isExpanded ? 'Collapse row' : 'Expand row'}
+                            >
+                              <svg
+                                className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M6 4l8 6-8 6V4z" />
+                              </svg>
+                            </button>
+                            <CommentCountBadge pageId={row.id} />
+                          </div>
                         </td>
-                      )}
-                      {columns.map((col) => {
-                        const prop = row.properties[col.propertyId];
-                        return (
-                          <td
-                            key={col.propertyId}
-                            className="px-4 py-3 text-sm text-gray-900 overflow-hidden"
-                          >
-                            {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
+                        {allowEdit && onEditClick && (
+                          <td className="px-2 py-3 w-16">
+                            <button
+                              onClick={() => onEditClick(row.id)}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              Edit
+                            </button>
                           </td>
-                        );
-                      })}
-                    </tr>
+                        )}
+                        {columns.map((col) => {
+                          const prop = row.properties[col.propertyId];
+                          return (
+                            <td
+                              key={col.propertyId}
+                              className="px-4 py-3 text-sm text-gray-900 overflow-hidden"
+                            >
+                              {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-blue-50/30">
+                          <td colSpan={colSpan} className="px-4 py-3 border-t border-blue-100">
+                            <div className="text-xs text-gray-500 font-medium mb-1">Latest Comment:</div>
+                            <CommentPreview pageId={row.id} />
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
