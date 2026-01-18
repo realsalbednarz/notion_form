@@ -272,8 +272,15 @@ export default function ListRenderer({
         </div>
       )}
 
-      {/* Table */}
-      {rows.length === 0 ? (
+      {/* No columns configured */}
+      {columns.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 border rounded-lg border-dashed">
+          <p className="font-medium">No columns configured</p>
+          <p className="text-sm mt-1">
+            Edit this form and enable "Show in List" on the fields you want to display.
+          </p>
+        </div>
+      ) : rows.length === 0 ? (
         <div className="text-center py-12 text-gray-500 border rounded-lg">
           <p>No records found</p>
           {filters.length > 0 && (
@@ -334,7 +341,7 @@ export default function ListRenderer({
       )}
 
       {/* Pagination */}
-      {hasMore && (
+      {columns.length > 0 && hasMore && (
         <div className="flex justify-center">
           <button
             onClick={handleLoadMore}
@@ -347,9 +354,11 @@ export default function ListRenderer({
       )}
 
       {/* Row count */}
-      <div className="text-sm text-gray-500 text-center">
-        {rows.length} record{rows.length !== 1 ? 's' : ''}{hasMore ? '+' : ''} shown
-      </div>
+      {columns.length > 0 && (
+        <div className="text-sm text-gray-500 text-center">
+          {rows.length} record{rows.length !== 1 ? 's' : ''}{hasMore ? '+' : ''} shown
+        </div>
+      )}
     </div>
   );
 }
