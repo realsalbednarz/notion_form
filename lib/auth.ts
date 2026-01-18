@@ -152,6 +152,8 @@ export async function exchangeCodeForToken(code: string) {
     throw new Error('Notion OAuth credentials not configured');
   }
 
+  console.log('Token exchange - redirect_uri:', redirectUri);
+
   const response = await fetch('https://api.notion.com/v1/oauth/token', {
     method: 'POST',
     headers: {
@@ -167,7 +169,8 @@ export async function exchangeCodeForToken(code: string) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error_description || 'Failed to exchange code for token');
+    console.error('Notion token exchange error:', JSON.stringify(error));
+    throw new Error(error.error_description || error.error || 'Failed to exchange code for token');
   }
 
   return response.json();
