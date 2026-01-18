@@ -130,9 +130,6 @@ export default function FormsPage() {
                     Name
                   </th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                    Mode
-                  </th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
                     Updated
                   </th>
                   <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
@@ -152,11 +149,6 @@ export default function FormsPage() {
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-700 capitalize">
-                        {form.mode}
-                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {new Date(form.updatedAt).toLocaleDateString()}

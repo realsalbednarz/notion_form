@@ -117,6 +117,19 @@ export default function FormPreviewPage() {
   return (
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
+        {/* Preview Window Banner */}
+        <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 flex items-center justify-between">
+          <span className="text-sm text-yellow-800 font-medium">
+            Preview Window - This tab can be closed when done testing
+          </span>
+          <button
+            onClick={() => window.close()}
+            className="text-sm text-yellow-700 hover:text-yellow-900 font-medium"
+          >
+            Close Preview
+          </button>
+        </div>
+
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -145,12 +158,6 @@ export default function FormPreviewPage() {
               </span>
             )}
           </div>
-          <button
-            onClick={() => router.back()}
-            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            &larr; Back to Editor
-          </button>
         </div>
 
         <div className="bg-white rounded-lg border shadow-sm p-6">

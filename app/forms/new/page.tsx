@@ -87,6 +87,12 @@ export default function NewFormPage() {
         )}
 
         {!loading && !error && databases.length > 0 && (
+          <p className="text-sm text-gray-500 mt-4">
+            Don't see a database? In Notion, open the database page, click "..." menu, then "Connections" and add the Notion Form Builder integration.
+          </p>
+        )}
+
+        {!loading && !error && databases.length > 0 && (
           <div className="grid gap-3">
             {databases.map((db) => (
               <button
