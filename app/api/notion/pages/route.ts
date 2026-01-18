@@ -86,6 +86,15 @@ function convertToNotionProperty(type: string, value: any): any {
         relation: pageIds.map((id: string) => ({ id })),
       };
 
+    case 'people':
+      // Expect a user ID or array of user IDs
+      const userIds = Array.isArray(value)
+        ? value
+        : [value].filter(Boolean);
+      return {
+        people: userIds.map((id: string) => ({ object: 'user', id })),
+      };
+
     // Read-only types - skip
     case 'formula':
     case 'rollup':

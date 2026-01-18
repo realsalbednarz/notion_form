@@ -13,5 +13,6 @@ export async function GET() {
     email: formUser.email,
     name: formUser.name,
     avatarUrl: formUser.avatarUrl,
+    notionUserId: formUser.notionUserId,
   });
 }

@@ -21,12 +21,19 @@ interface SubmissionResult {
   error?: string;
 }
 
+interface CurrentUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 export default function FormPreviewPage() {
   const router = useRouter();
   const [formConfig, setFormConfig] = useState<FormConfig | null>(null);
   const [liveMode, setLiveMode] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<SubmissionResult | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     // Load form config from sessionStorage
@@ -38,6 +45,29 @@ export default function FormPreviewPage() {
         console.error('Failed to parse form config:', e);
       }
     }
+  }, []);
+
+  // Fetch current user for default values
+  useEffect(() => {
+    // Try form user first, then admin user
+    Promise.all([
+      fetch('/api/auth/email/me').then(r => r.ok ? r.json() : null),
+      fetch('/api/auth/me').then(r => r.ok ? r.json() : null),
+    ]).then(([formUser, adminUser]) => {
+      if (formUser) {
+        setCurrentUser({
+          id: formUser.notionUserId || formUser.id,
+          email: formUser.email,
+          name: formUser.name,
+        });
+      } else if (adminUser) {
+        setCurrentUser({
+          id: adminUser.notionUserId || adminUser.id,
+          email: adminUser.email,
+          name: adminUser.name,
+        });
+      }
+    }).catch(() => {});
   }, []);
 
   const handleSubmit = async (data: Record<string, any>) => {
@@ -239,6 +269,7 @@ export default function FormPreviewPage() {
               fields={formConfig.fields}
               onSubmit={handleSubmit}
               submitLabel={liveMode ? 'Submit to Notion' : 'Submit Preview'}
+              currentUser={currentUser || undefined}
             />
           )}
         </div>

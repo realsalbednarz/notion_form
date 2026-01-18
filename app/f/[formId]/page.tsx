@@ -16,6 +16,12 @@ interface FormData {
   };
 }
 
+interface CurrentUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 export default function PublicFormPage() {
   const params = useParams();
   const [form, setForm] = useState<FormData | null>(null);
@@ -23,6 +29,7 @@ export default function PublicFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<{ pageId: string; url: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     async function fetchForm() {
@@ -46,6 +53,23 @@ export default function PublicFormPage() {
       fetchForm();
     }
   }, [params.formId]);
+
+  // Fetch current user for default values (e.g., current_user default)
+  useEffect(() => {
+    fetch('/api/auth/email/me')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          // Use notionUserId for the id field so it works with person fields
+          setCurrentUser({
+            id: data.notionUserId || data.id,
+            email: data.email,
+            name: data.name,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (formData: Record<string, any>) => {
     if (!form) return;
@@ -145,6 +169,7 @@ export default function PublicFormPage() {
             description={form.description || undefined}
             fields={form.config.fields}
             onSubmit={handleSubmit}
+            currentUser={currentUser || undefined}
           />
         </div>
 

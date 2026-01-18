@@ -18,5 +18,6 @@ export async function GET() {
     avatarUrl: user.avatarUrl,
     workspaceId: user.workspaceId,
     workspaceName: user.workspaceName,
+    notionUserId: user.notionUserId,
   });
 }

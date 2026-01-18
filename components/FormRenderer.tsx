@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react';
 import { FieldConfig, DefaultValue } from '@/types/form';
 
+interface NotionUser {
+  id: string;
+  name: string;
+  email: string | null;
+  avatarUrl: string | null;
+}
+
 interface FormRendererProps {
   name: string;
   description?: string;
@@ -62,6 +69,25 @@ export default function FormRenderer({
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [workspaceUsers, setWorkspaceUsers] = useState<NotionUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  // Fetch workspace users if there are people fields
+  useEffect(() => {
+    const hasPeopleField = fields.some(f => f.notionPropertyType === 'people');
+    if (hasPeopleField) {
+      setUsersLoading(true);
+      fetch('/api/notion/users')
+        .then(res => res.json())
+        .then(data => {
+          if (data.users) {
+            setWorkspaceUsers(data.users);
+          }
+        })
+        .catch(err => console.error('Failed to fetch users:', err))
+        .finally(() => setUsersLoading(false));
+    }
+  }, [fields]);
 
   // Initialize default values
   useEffect(() => {
@@ -287,14 +313,26 @@ export default function FormRenderer({
 
       case 'people':
         return (
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => updateField(field.notionPropertyId, e.target.value)}
-            placeholder={field.placeholder || 'Enter email addresses'}
-            disabled={isDisabled}
-            className={inputClasses}
-          />
+          <div className="relative">
+            <select
+              value={value}
+              onChange={(e) => updateField(field.notionPropertyId, e.target.value)}
+              disabled={isDisabled || usersLoading}
+              className={inputClasses}
+            >
+              <option value="">{field.placeholder || 'Select a person'}</option>
+              {workspaceUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}{user.email ? ` (${user.email})` : ''}
+                </option>
+              ))}
+            </select>
+            {usersLoading && (
+              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                Loading...
+              </span>
+            )}
+          </div>
         );
 
       case 'files':
