@@ -27,8 +27,8 @@ interface ListRendererProps {
 }
 
 // Truncated cell with expand on hover
-function TruncatedCell({ children, maxWidth = 200 }: { children: React.ReactNode; maxWidth?: number }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function TruncatedCell({ children }: { children: React.ReactNode }) {
+  const [isHovered, setIsHovered] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -39,17 +39,16 @@ function TruncatedCell({ children, maxWidth = 200 }: { children: React.ReactNode
   }, [children]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <div
         ref={contentRef}
         className="truncate cursor-default"
-        style={{ maxWidth }}
-        onMouseEnter={() => needsTruncation && setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
+        onMouseEnter={() => needsTruncation && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {children}
       </div>
-      {isExpanded && (
+      {isHovered && (
         <div className="absolute z-50 left-0 top-full mt-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal">
           {children}
         </div>
@@ -338,23 +337,23 @@ export default function ListRenderer({
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full divide-y divide-gray-200 table-fixed">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-2 py-3 w-8"></th>
-                  {columns.map((col) => (
+                  <th className="px-2 py-3 w-10"></th>
+                  {allowEdit && (
+                    <th className="px-2 py-3 w-16"></th>
+                  )}
+                  {columns.map((col, index) => (
                     <th
                       key={col.propertyId}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        index === 0 ? 'w-1/4' : ''
+                      }`}
                     >
                       {col.label}
                     </th>
                   ))}
-                  {allowEdit && (
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                      Actions
-                    </th>
-                  )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -362,35 +361,23 @@ export default function ListRenderer({
                   const isExpanded = expandedRows.has(row.id);
                   return (
                     <tr key={row.id} className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
-                      <td className="px-2 py-3 w-8">
+                      <td className="px-2 py-3 w-10">
                         <button
                           onClick={() => toggleRowExpanded(row.id)}
                           className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
                           title={isExpanded ? 'Collapse row' : 'Expand row'}
                         >
                           <svg
-                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                            className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            <path d="M6 4l8 6-8 6V4z" />
                           </svg>
                         </button>
                       </td>
-                      {columns.map((col) => {
-                        const prop = row.properties[col.propertyId];
-                        return (
-                          <td
-                            key={col.propertyId}
-                            className={`px-4 py-3 text-sm text-gray-900 ${isExpanded ? '' : 'max-w-xs'}`}
-                          >
-                            {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
-                          </td>
-                        );
-                      })}
                       {allowEdit && onEditClick && (
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-2 py-3 w-16">
                           <button
                             onClick={() => onEditClick(row.id)}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -399,6 +386,17 @@ export default function ListRenderer({
                           </button>
                         </td>
                       )}
+                      {columns.map((col) => {
+                        const prop = row.properties[col.propertyId];
+                        return (
+                          <td
+                            key={col.propertyId}
+                            className="px-4 py-3 text-sm text-gray-900 overflow-hidden"
+                          >
+                            {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
+                          </td>
+                        );
+                      })}
                     </tr>
                   );
                 })}
