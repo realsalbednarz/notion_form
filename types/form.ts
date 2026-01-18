@@ -31,7 +31,7 @@ export const FieldConfigSchema = z.object({
   required: z.boolean().default(false),
   editable: z.boolean().default(true),
   visible: z.boolean().default(true),
-  showInList: z.boolean().default(false),  // Show as column in list view
+  showInList: z.boolean().default(true),  // Show as column in list view (default: shown)
   defaultValue: DefaultValueSchema.optional(),
   relationPath: z.array(z.string()).optional(),
   validation: z.object({

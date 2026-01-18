@@ -213,22 +213,22 @@ function SortableFieldItem({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={field.visible}
-                  onChange={(e) => onUpdate({ visible: e.target.checked })}
+                  checked={!field.visible}
+                  onChange={(e) => onUpdate({ visible: !e.target.checked })}
                   className="h-4 w-4 text-blue-600 rounded"
                 />
-                Show in Form
+                Hide in Add/Edit
               </label>
             )}
 
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={field.showInList || false}
-                onChange={(e) => onUpdate({ showInList: e.target.checked })}
+                checked={!field.showInList}
+                onChange={(e) => onUpdate({ showInList: !e.target.checked })}
                 className="h-4 w-4 text-blue-600 rounded"
               />
-              Show in List
+              Hide in List
             </label>
           </div>
 
@@ -411,7 +411,7 @@ export default function EditFormPage() {
             const prop = dbPropMap.get(sf.notionPropertyId) as Property;
             return {
               ...sf,
-              showInList: sf.showInList || false,  // Ensure default for older configs
+              showInList: sf.showInList !== false,  // Default to true for older configs
               enabled: true,
               originalName: prop.name,
               options: prop.options,
@@ -432,7 +432,7 @@ export default function EditFormPage() {
             required: false,
             editable: !READ_ONLY_TYPES.includes(prop.type),
             visible: true,
-            showInList: false,
+            showInList: true,
             options: prop.options,
           }));
 
