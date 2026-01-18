@@ -213,22 +213,22 @@ function SortableFieldItem({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={!field.visible}
-                  onChange={(e) => onUpdate({ visible: !e.target.checked })}
+                  checked={field.visible}
+                  onChange={(e) => onUpdate({ visible: e.target.checked })}
                   className="h-4 w-4 text-blue-600 rounded"
                 />
-                Hide in Add/Edit
+                Show in Add/Edit
               </label>
             )}
 
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={!field.showInList}
-                onChange={(e) => onUpdate({ showInList: !e.target.checked })}
+                checked={field.showInList}
+                onChange={(e) => onUpdate({ showInList: e.target.checked })}
                 className="h-4 w-4 text-blue-600 rounded"
               />
-              Hide in List
+              Show in List
             </label>
           </div>
 
