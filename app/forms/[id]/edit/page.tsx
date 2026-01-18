@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import TopNav from '@/components/TopNav';
 import { FieldConfig } from '@/types/form';
 
 interface Property {
@@ -242,17 +243,64 @@ export default function EditFormPage() {
     window.open('/forms/preview', '_blank');
   };
 
+  const [showSchema, setShowSchema] = useState(false);
+
   return (
     <main className="min-h-screen bg-gray-50">
+      <TopNav />
+
       <div className="max-w-6xl mx-auto p-8">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Link
             href="/forms"
             className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
           >
             &larr; Back to Forms
           </Link>
+          {database && (
+            <button
+              onClick={() => setShowSchema(!showSchema)}
+              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            >
+              {showSchema ? 'Hide' : 'View'} Schema
+              <span className="text-xs">{showSchema ? '▲' : '▼'}</span>
+            </button>
+          )}
         </div>
+
+        {/* Collapsible Schema View */}
+        {showSchema && database && (
+          <div className="mb-6 bg-white rounded-lg border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-gray-900">Database Schema: {database.title}</h3>
+              <a
+                href={database.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Open in Notion
+              </a>
+            </div>
+            <div className="text-xs text-gray-500 mb-2">
+              {database.properties.length} properties
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {database.properties.map((prop) => (
+                <div key={prop.id} className="flex items-center gap-2 text-sm">
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                      TYPE_BADGES[prop.type] || 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {prop.type}
+                  </span>
+                  <span className="truncate">{prop.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="flex items-center justify-center py-12">

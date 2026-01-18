@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import TopNav from '@/components/TopNav';
 
 interface Property {
   id: string;
@@ -46,6 +47,7 @@ const TYPE_BADGES: Record<string, string> = {
 
 export default function DatabaseSchemaPage() {
   const params = useParams();
+  const router = useRouter();
   const [database, setDatabase] = useState<Database | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,10 @@ export default function DatabaseSchemaPage() {
         const data = await response.json();
 
         if (!response.ok) {
+          if (response.status === 401) {
+            router.push('/login');
+            return;
+          }
           throw new Error(data.error || 'Failed to fetch database');
         }
 
@@ -71,17 +77,19 @@ export default function DatabaseSchemaPage() {
     if (params.id) {
       fetchDatabase();
     }
-  }, [params.id]);
+  }, [params.id, router]);
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+    <main className="min-h-screen bg-gray-50">
+      <TopNav />
+
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="mb-6">
           <Link
-            href="/databases"
+            href="/forms/new"
             className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
           >
-            &larr; Back to Databases
+            &larr; Back to New Form
           </Link>
         </div>
 

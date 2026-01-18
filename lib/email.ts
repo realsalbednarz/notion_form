@@ -1,11 +1,18 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const APP_NAME = 'Notion Form Builder';
 
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+  return new Resend(apiKey);
+}
+
 export async function sendMagicLinkEmail(email: string, token: string): Promise<void> {
+  const resend = getResendClient();
+  const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const magicLink = `${appUrl}/api/auth/email/verify?token=${token}`;
 

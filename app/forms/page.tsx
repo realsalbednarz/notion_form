@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import TopNav from '@/components/TopNav';
 
 interface FormConfig {
   id: string;
@@ -79,25 +80,13 @@ export default function FormsPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="font-semibold">
-            Notion Form Builder
-          </Link>
-          <Link
-            href="/databases"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            Databases
-          </Link>
-        </div>
-      </header>
+      <TopNav />
 
       <div className="max-w-6xl mx-auto p-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">My Forms</h1>
           <Link
-            href="/databases"
+            href="/forms/new"
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
           >
             Create New Form
@@ -124,10 +113,10 @@ export default function FormsPage() {
               Create your first form by selecting a database
             </p>
             <Link
-              href="/databases"
+              href="/forms/new"
               className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
             >
-              Browse Databases
+              Create Form
             </Link>
           </div>
         )}
