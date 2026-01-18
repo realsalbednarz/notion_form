@@ -57,6 +57,21 @@ function computeDefaultValue(
   return undefined;
 }
 
+// Helper to compute all default values for fields
+function computeAllDefaults(
+  fields: FieldConfig[],
+  currentUser?: { id: string; email: string; name?: string }
+): Record<string, any> {
+  const defaults: Record<string, any> = {};
+  fields.forEach(field => {
+    const defaultVal = computeDefaultValue(field.defaultValue, currentUser);
+    if (defaultVal !== undefined) {
+      defaults[field.notionPropertyId] = defaultVal;
+    }
+  });
+  return defaults;
+}
+
 export default function FormRenderer({
   name,
   description,
@@ -66,7 +81,10 @@ export default function FormRenderer({
   disabled = false,
   currentUser,
 }: FormRendererProps) {
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  // Initialize form data with defaults synchronously
+  const [formData, setFormData] = useState<Record<string, any>>(() =>
+    computeAllDefaults(fields, currentUser)
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [workspaceUsers, setWorkspaceUsers] = useState<NotionUser[]>([]);
@@ -89,15 +107,9 @@ export default function FormRenderer({
     }
   }, [fields]);
 
-  // Initialize default values
+  // Re-compute defaults if currentUser changes (e.g., loaded async)
   useEffect(() => {
-    const defaults: Record<string, any> = {};
-    fields.forEach(field => {
-      const defaultVal = computeDefaultValue(field.defaultValue, currentUser);
-      if (defaultVal !== undefined) {
-        defaults[field.notionPropertyId] = defaultVal;
-      }
-    });
+    const defaults = computeAllDefaults(fields, currentUser);
     if (Object.keys(defaults).length > 0) {
       setFormData(prev => ({ ...defaults, ...prev }));
     }
