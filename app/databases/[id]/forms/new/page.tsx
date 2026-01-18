@@ -23,6 +23,8 @@ interface FieldConfigState extends FieldConfig {
   enabled: boolean;
   originalName: string;
   options?: { id: string; name: string; color: string }[];
+  defaultValueType?: 'none' | 'static' | 'current_user' | 'current_date' | 'current_time';
+  defaultValueStatic?: string;
 }
 
 const TYPE_BADGES: Record<string, string> = {
@@ -118,13 +120,42 @@ export default function NewFormPage() {
     ));
   };
 
+  const moveFieldUp = (propertyId: string) => {
+    const index = fields.findIndex(f => f.notionPropertyId === propertyId);
+    if (index <= 0) return;
+    const newFields = [...fields];
+    [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+    setFields(newFields);
+  };
+
+  const moveFieldDown = (propertyId: string) => {
+    const index = fields.findIndex(f => f.notionPropertyId === propertyId);
+    if (index < 0 || index >= fields.length - 1) return;
+    const newFields = [...fields];
+    [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
+    setFields(newFields);
+  };
+
   const enabledFields = fields.filter(f => f.enabled);
 
   const getFormConfig = () => ({
     name: formName,
     description: formDescription,
     databaseId: params.id,
-    fields: enabledFields.map(({ enabled, originalName, ...field }) => field),
+    fields: enabledFields.map(({ enabled, originalName, defaultValueType, defaultValueStatic, options, ...field }) => {
+      // Convert defaultValue to the expected format
+      let defaultValue = undefined;
+      if (defaultValueType === 'static' && defaultValueStatic) {
+        defaultValue = { type: 'static' as const, value: defaultValueStatic };
+      } else if (defaultValueType === 'current_user') {
+        defaultValue = { type: 'function' as const, name: 'current_user' as const };
+      } else if (defaultValueType === 'current_date') {
+        defaultValue = { type: 'function' as const, name: 'today' as const };
+      } else if (defaultValueType === 'current_time') {
+        defaultValue = { type: 'function' as const, name: 'now' as const };
+      }
+      return { ...field, defaultValue, options };
+    }),
   });
 
   const handleSave = async () => {
@@ -248,6 +279,24 @@ export default function NewFormPage() {
                         className="flex items-center gap-3 p-3 cursor-pointer"
                         onClick={() => toggleField(field.notionPropertyId)}
                       >
+                        {field.enabled && (
+                          <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => moveFieldUp(field.notionPropertyId)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5 hover:bg-gray-100 rounded"
+                              title="Move up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => moveFieldDown(field.notionPropertyId)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5 hover:bg-gray-100 rounded"
+                              title="Move down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        )}
                         <input
                           type="checkbox"
                           checked={field.enabled}
@@ -336,6 +385,53 @@ export default function NewFormPage() {
                                 />
                                 Visible
                               </label>
+                            )}
+                          </div>
+
+                          {/* Default Value Configuration */}
+                          <div className="border-t pt-3 mt-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Default Value
+                            </label>
+                            <select
+                              value={field.defaultValueType || 'none'}
+                              onChange={(e) => updateField(field.notionPropertyId, {
+                                defaultValueType: e.target.value as any,
+                                defaultValueStatic: e.target.value === 'static' ? field.defaultValueStatic : undefined
+                              })}
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="none">No default</option>
+                              <option value="static">Static value</option>
+                              {field.notionPropertyType === 'people' && (
+                                <option value="current_user">Current user</option>
+                              )}
+                              {field.notionPropertyType === 'date' && (
+                                <>
+                                  <option value="current_date">Current date</option>
+                                  <option value="current_time">Current date & time</option>
+                                </>
+                              )}
+                            </select>
+
+                            {field.defaultValueType === 'static' && (
+                              <input
+                                type={field.notionPropertyType === 'number' ? 'number' : 'text'}
+                                value={field.defaultValueStatic || ''}
+                                onChange={(e) => updateField(field.notionPropertyId, { defaultValueStatic: e.target.value })}
+                                placeholder="Enter default value"
+                                className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                              />
+                            )}
+
+                            {field.defaultValueType === 'current_user' && (
+                              <p className="text-xs text-gray-500 mt-1">Will be set to the logged-in user</p>
+                            )}
+                            {field.defaultValueType === 'current_date' && (
+                              <p className="text-xs text-gray-500 mt-1">Will be set to today's date</p>
+                            )}
+                            {field.defaultValueType === 'current_time' && (
+                              <p className="text-xs text-gray-500 mt-1">Will be set to current date and time</p>
                             )}
                           </div>
                         </div>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { FieldConfig } from '@/types/form';
+import { useState, useEffect } from 'react';
+import { FieldConfig, DefaultValue } from '@/types/form';
 
 interface FormRendererProps {
   name: string;
@@ -10,6 +10,7 @@ interface FormRendererProps {
   onSubmit: (data: Record<string, any>) => void | Promise<void>;
   submitLabel?: string;
   disabled?: boolean;
+  currentUser?: { id: string; email: string; name?: string };
 }
 
 interface FieldOption {
@@ -22,6 +23,33 @@ interface FieldWithOptions extends FieldConfig {
   options?: FieldOption[];
 }
 
+// Helper to compute default value
+function computeDefaultValue(
+  defaultValue: DefaultValue | undefined,
+  currentUser?: { id: string; email: string; name?: string }
+): any {
+  if (!defaultValue) return undefined;
+
+  if (defaultValue.type === 'static') {
+    return defaultValue.value;
+  }
+
+  if (defaultValue.type === 'function') {
+    switch (defaultValue.name) {
+      case 'today':
+        return new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      case 'now':
+        return new Date().toISOString();
+      case 'current_user':
+        return currentUser?.id || '';
+      default:
+        return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 export default function FormRenderer({
   name,
   description,
@@ -29,10 +57,25 @@ export default function FormRenderer({
   onSubmit,
   submitLabel = 'Submit',
   disabled = false,
+  currentUser,
 }: FormRendererProps) {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Initialize default values
+  useEffect(() => {
+    const defaults: Record<string, any> = {};
+    fields.forEach(field => {
+      const defaultVal = computeDefaultValue(field.defaultValue, currentUser);
+      if (defaultVal !== undefined) {
+        defaults[field.notionPropertyId] = defaultVal;
+      }
+    });
+    if (Object.keys(defaults).length > 0) {
+      setFormData(prev => ({ ...defaults, ...prev }));
+    }
+  }, [fields, currentUser]);
 
   const visibleFields = fields.filter(f => f.visible !== false);
 
