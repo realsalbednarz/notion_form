@@ -37,12 +37,13 @@ interface Database {
   properties: Property[];
 }
 
-interface FieldConfigState extends FieldConfig {
+interface FieldConfigState extends Omit<FieldConfig, 'showInList'> {
   enabled: boolean;
   originalName: string;
   options?: { id: string; name: string; color: string }[];
   defaultValueType?: 'none' | 'static' | 'current_user' | 'current_date' | 'current_time';
   defaultValueStatic?: string;
+  showInList: boolean;
 }
 
 const TYPE_BADGES: Record<string, string> = {
@@ -177,7 +178,7 @@ function SortableFieldItem({
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -188,17 +189,25 @@ function SortableFieldItem({
               Required
             </label>
 
-            {!READ_ONLY_TYPES.includes(field.notionPropertyType) && (
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={field.visible}
-                  onChange={(e) => onUpdate({ visible: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 rounded"
-                />
-                Visible
-              </label>
-            )}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={field.visible}
+                onChange={(e) => onUpdate({ visible: e.target.checked })}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              Show in Add/Edit
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={field.showInList}
+                onChange={(e) => onUpdate({ showInList: e.target.checked })}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              Show in List
+            </label>
           </div>
 
           <div className="border-t pt-3 mt-3">
@@ -299,6 +308,12 @@ export default function NewFormPage() {
   const [saving, setSaving] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
 
+  // Capabilities
+  const [allowCreate, setAllowCreate] = useState(true);
+  const [allowEdit, setAllowEdit] = useState(false);
+  const [allowList, setAllowList] = useState(false);
+  const [listPageSize, setListPageSize] = useState(20);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -330,6 +345,7 @@ export default function NewFormPage() {
           required: prop.type === 'title',
           editable: !READ_ONLY_TYPES.includes(prop.type),
           visible: true,
+          showInList: true,
           options: prop.options,
         }));
 
@@ -390,6 +406,12 @@ export default function NewFormPage() {
       }
       return { ...field, defaultValue, options };
     }),
+    permissions: {
+      allowCreate,
+      allowEdit,
+      allowList,
+    },
+    listConfig: allowList ? { pageSize: listPageSize } : undefined,
   });
 
   const handleSave = async () => {
@@ -410,9 +432,15 @@ export default function NewFormPage() {
             fields: formConfig.fields,
             filters: [],
             sorts: [],
-            pageSize: 20,
+            pageSize: formConfig.listConfig?.pageSize || 20,
             layout: { showTitle: true },
-            permissions: { allowCreate: true, allowEdit: false, allowDelete: false },
+            permissions: {
+              allowCreate: formConfig.permissions.allowCreate,
+              allowEdit: formConfig.permissions.allowEdit,
+              allowDelete: false,
+              allowList: formConfig.permissions.allowList,
+            },
+            listConfig: formConfig.listConfig,
           },
         }),
       });
@@ -536,6 +564,67 @@ export default function NewFormPage() {
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
+
+                  {/* Capabilities */}
+                  <div className="border-t pt-4 mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Form Capabilities
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={allowCreate}
+                          onChange={(e) => setAllowCreate(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        Allow Create (add new records)
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={allowEdit}
+                          onChange={(e) => setAllowEdit(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        Allow Edit (modify existing records)
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={allowList}
+                          onChange={(e) => setAllowList(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        Enable List View (display records in table)
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* List Configuration */}
+                  {allowList && (
+                    <div className="border-t pt-4 mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        List View Settings
+                      </label>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Page Size
+                        </label>
+                        <input
+                          type="number"
+                          value={listPageSize}
+                          onChange={(e) => setListPageSize(Math.max(1, Math.min(100, parseInt(e.target.value) || 20)))}
+                          min={1}
+                          max={100}
+                          className="w-24 px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Number of records per page (1-100)
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

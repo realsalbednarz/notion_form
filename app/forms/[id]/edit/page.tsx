@@ -209,17 +209,15 @@ function SortableFieldItem({
               Required
             </label>
 
-            {!READ_ONLY_TYPES.includes(field.notionPropertyType) && (
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={field.visible}
-                  onChange={(e) => onUpdate({ visible: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 rounded"
-                />
-                Show in Add/Edit
-              </label>
-            )}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={field.visible}
+                onChange={(e) => onUpdate({ visible: e.target.checked })}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              Show in Add/Edit
+            </label>
 
             <label className="flex items-center gap-2 text-sm">
               <input
