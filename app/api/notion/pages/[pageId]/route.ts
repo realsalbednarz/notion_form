@@ -158,6 +158,15 @@ function extractPropertyValue(property: any): any {
       return rollup?.[rollup.type] ?? null;
     case 'relation':
       return property.relation?.map((r: any) => r.id) || [];
+    case 'unique_id':
+      // Return the unique_id object with prefix and number
+      if (property.unique_id) {
+        return {
+          prefix: property.unique_id.prefix || '',
+          number: property.unique_id.number,
+        };
+      }
+      return null;
     default:
       return null;
   }

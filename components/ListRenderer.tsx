@@ -59,7 +59,7 @@ function TruncatedCell({ children, maxWidth = 200 }: { children: React.ReactNode
 }
 
 // Format cell value for display
-function formatCellValue(type: string, value: any): React.ReactNode {
+function formatCellValue(type: string, value: any, expanded: boolean = false): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-gray-400">-</span>;
   }
@@ -70,6 +70,9 @@ function formatCellValue(type: string, value: any): React.ReactNode {
     case 'url':
     case 'email':
     case 'phone_number':
+      if (expanded) {
+        return <span className="whitespace-pre-wrap break-words">{String(value)}</span>;
+      }
       return <TruncatedCell>{String(value)}</TruncatedCell>;
 
     case 'number':
@@ -172,6 +175,19 @@ export default function ListRenderer({
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRowExpanded = (rowId: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(rowId)) {
+        next.delete(rowId);
+      } else {
+        next.add(rowId);
+      }
+      return next;
+    });
+  };
 
   const fetchRows = useCallback(async (cursor?: string) => {
     try {
@@ -325,6 +341,7 @@ export default function ListRenderer({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-2 py-3 w-8"></th>
                   {columns.map((col) => (
                     <th
                       key={col.propertyId}
@@ -341,31 +358,50 @@ export default function ListRenderer({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {columns.map((col) => {
-                      const prop = row.properties[col.propertyId];
-                      return (
-                        <td
-                          key={col.propertyId}
-                          className="px-4 py-3 text-sm text-gray-900 max-w-xs"
-                        >
-                          {prop ? formatCellValue(prop.type, prop.value) : '-'}
-                        </td>
-                      );
-                    })}
-                    {allowEdit && onEditClick && (
-                      <td className="px-4 py-3 text-right">
+                {rows.map((row) => {
+                  const isExpanded = expandedRows.has(row.id);
+                  return (
+                    <tr key={row.id} className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
+                      <td className="px-2 py-3 w-8">
                         <button
-                          onClick={() => onEditClick(row.id)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          onClick={() => toggleRowExpanded(row.id)}
+                          className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                          title={isExpanded ? 'Collapse row' : 'Expand row'}
                         >
-                          Edit
+                          <svg
+                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </button>
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      {columns.map((col) => {
+                        const prop = row.properties[col.propertyId];
+                        return (
+                          <td
+                            key={col.propertyId}
+                            className={`px-4 py-3 text-sm text-gray-900 ${isExpanded ? '' : 'max-w-xs'}`}
+                          >
+                            {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
+                          </td>
+                        );
+                      })}
+                      {allowEdit && onEditClick && (
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => onEditClick(row.id)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

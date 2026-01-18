@@ -317,7 +317,16 @@ export default function NewFormPage() {
   // Display titles
   const [listTitle, setListTitle] = useState('');
   const [createTitle, setCreateTitle] = useState('');
-  const [editTitle, setEditTitle] = useState('');
+  const [editTitle, setEditTitle] = useState('Edit Record');
+
+  // Update createTitle when allowList changes
+  useEffect(() => {
+    if (allowList) {
+      setCreateTitle('Create New Record');
+    } else if (formName) {
+      setCreateTitle(formName);
+    }
+  }, [allowList, formName]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -337,7 +346,11 @@ export default function NewFormPage() {
         }
 
         setDatabase(data);
-        setFormName(`${data.title} Form`);
+        const defaultFormName = `${data.title} Form`;
+        setFormName(defaultFormName);
+        // Set default display titles
+        setListTitle(defaultFormName);
+        setCreateTitle(defaultFormName);
 
         const initialFields: FieldConfigState[] = data.properties.map((prop: Property) => ({
           enabled: prop.type === 'title',

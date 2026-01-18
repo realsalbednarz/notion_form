@@ -167,6 +167,13 @@ function extractPropertyValue(property: any): any {
       return rollup?.[rollup.type] ?? null;
     case 'relation':
       return property.relation?.map((r: any) => r.id) || [];
+    case 'unique_id':
+      // Format unique_id to a display string
+      if (property.unique_id) {
+        const { prefix, number } = property.unique_id;
+        return prefix ? `${prefix}-${number}` : String(number);
+      }
+      return null;
     default:
       return null;
   }

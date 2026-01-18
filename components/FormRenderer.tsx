@@ -379,11 +379,29 @@ export default function FormRenderer({
       case 'created_by':
       case 'last_edited_time':
       case 'last_edited_by':
-      case 'unique_id':
         return (
           <input
             type="text"
             value={value || '(auto-generated)'}
+            disabled
+            className={`${inputClasses} bg-gray-100 text-gray-500`}
+          />
+        );
+
+      case 'unique_id':
+        // Format unique_id which can be { prefix: string, number: number } or just a value
+        let displayValue = value;
+        if (value && typeof value === 'object') {
+          if (value.prefix && value.number !== undefined) {
+            displayValue = `${value.prefix}-${value.number}`;
+          } else if (value.number !== undefined) {
+            displayValue = String(value.number);
+          }
+        }
+        return (
+          <input
+            type="text"
+            value={displayValue || '(auto-generated on save)'}
             disabled
             className={`${inputClasses} bg-gray-100 text-gray-500`}
           />

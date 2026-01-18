@@ -346,6 +346,18 @@ export default function EditFormPage() {
   const [listTitle, setListTitle] = useState('');
   const [createTitle, setCreateTitle] = useState('');
   const [editTitle, setEditTitle] = useState('');
+  const [titlesInitialized, setTitlesInitialized] = useState(false);
+
+  // Update createTitle when allowList changes (after initial load)
+  useEffect(() => {
+    if (titlesInitialized) {
+      if (allowList) {
+        setCreateTitle('Create New Record');
+      } else if (formName) {
+        setCreateTitle(formName);
+      }
+    }
+  }, [allowList, formName, titlesInitialized]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -383,11 +395,13 @@ export default function EditFormPage() {
         setListPageSize(listConfig.pageSize || 20);
         setListFilters(listConfig.filters || []);
 
-        // Load display titles
+        // Load display titles with sensible defaults
         const displayTitles = formData.form.config.displayTitles || {};
-        setListTitle(displayTitles.listTitle || '');
-        setCreateTitle(displayTitles.createTitle || '');
-        setEditTitle(displayTitles.editTitle || '');
+        const isListEnabled = permissions.allowList === true;
+        setListTitle(displayTitles.listTitle || formData.form.name);
+        setCreateTitle(displayTitles.createTitle || (isListEnabled ? 'Create New Record' : formData.form.name));
+        setEditTitle(displayTitles.editTitle || 'Edit Record');
+        setTitlesInitialized(true);
 
         const dbResponse = await fetch(`/api/notion/databases/${formData.form.databaseId}`);
         const dbData = await dbResponse.json();
