@@ -31,6 +31,7 @@ export const FieldConfigSchema = z.object({
   required: z.boolean().default(false),
   editable: z.boolean().default(true),
   visible: z.boolean().default(true),
+  showInList: z.boolean().default(false),  // Show as column in list view
   defaultValue: DefaultValueSchema.optional(),
   relationPath: z.array(z.string()).optional(),
   validation: z.object({
@@ -43,7 +44,7 @@ export const FieldConfigSchema = z.object({
 
 export type FieldConfig = z.infer<typeof FieldConfigSchema>;
 
-// Notion filter
+// Notion filter (raw format)
 export const NotionFilterSchema = z.object({
   property: z.string(),
   type: z.string(),
@@ -51,6 +52,33 @@ export const NotionFilterSchema = z.object({
 });
 
 export type NotionFilter = z.infer<typeof NotionFilterSchema>;
+
+// Design-time filter for list views
+export const FilterOperatorSchema = z.enum([
+  'equals',
+  'does_not_equal',
+  'contains',
+  'does_not_contain',
+  'starts_with',
+  'ends_with',
+  'greater_than',
+  'less_than',
+  'greater_than_or_equal_to',
+  'less_than_or_equal_to',
+  'is_empty',
+  'is_not_empty',
+]);
+
+export type FilterOperator = z.infer<typeof FilterOperatorSchema>;
+
+export const DesignTimeFilterSchema = z.object({
+  propertyId: z.string(),
+  propertyType: z.string(),  // needed to build correct Notion filter
+  operator: FilterOperatorSchema,
+  value: z.any().optional(),  // optional for is_empty/is_not_empty
+});
+
+export type DesignTimeFilter = z.infer<typeof DesignTimeFilterSchema>;
 
 // Notion sort
 export const NotionSortSchema = z.object({
@@ -60,14 +88,22 @@ export const NotionSortSchema = z.object({
 
 export type NotionSort = z.infer<typeof NotionSortSchema>;
 
+// List configuration for list-enabled forms
+export const ListConfigSchema = z.object({
+  pageSize: z.number().default(20),
+  filters: z.array(DesignTimeFilterSchema).default([]),
+});
+
+export type ListConfig = z.infer<typeof ListConfigSchema>;
+
 // Form configuration
 export const FormConfigDataSchema = z.object({
   databaseId: z.string(),
   viewId: z.string().optional(),
   fields: z.array(FieldConfigSchema),
-  filters: z.array(NotionFilterSchema).default([]),
+  filters: z.array(NotionFilterSchema).default([]),  // legacy, keeping for compatibility
   sorts: z.array(NotionSortSchema).default([]),
-  pageSize: z.number().default(20),
+  pageSize: z.number().default(20),  // legacy, keeping for compatibility
   layout: z.object({
     showTitle: z.boolean().default(true),
     titleTemplate: z.string().optional(),
@@ -75,9 +111,11 @@ export const FormConfigDataSchema = z.object({
   }).default({}),
   permissions: z.object({
     allowCreate: z.boolean().default(true),
-    allowEdit: z.boolean().default(true),
+    allowEdit: z.boolean().default(false),
     allowDelete: z.boolean().default(false),
+    allowList: z.boolean().default(false),  // Enable list view
   }).default({}),
+  listConfig: ListConfigSchema.optional(),  // Config for list view
 });
 
 export type FormConfigData = z.infer<typeof FormConfigDataSchema>;

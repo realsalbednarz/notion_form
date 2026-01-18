@@ -18,6 +18,7 @@ interface FormRendererProps {
   submitLabel?: string;
   disabled?: boolean;
   currentUser?: { id: string; email: string; name?: string };
+  initialData?: Record<string, any>;  // For edit mode - pre-populate with existing values
 }
 
 interface FieldOption {
@@ -80,11 +81,14 @@ export default function FormRenderer({
   submitLabel = 'Submit',
   disabled = false,
   currentUser,
+  initialData,
 }: FormRendererProps) {
-  // Initialize form data with defaults synchronously
-  const [formData, setFormData] = useState<Record<string, any>>(() =>
-    computeAllDefaults(fields, currentUser)
-  );
+  // Initialize form data with initialData (edit mode) or defaults (create mode)
+  const [formData, setFormData] = useState<Record<string, any>>(() => {
+    const defaults = computeAllDefaults(fields, currentUser);
+    // initialData takes precedence over defaults
+    return initialData ? { ...defaults, ...initialData } : defaults;
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [workspaceUsers, setWorkspaceUsers] = useState<NotionUser[]>([]);
@@ -114,6 +118,15 @@ export default function FormRenderer({
       setFormData(prev => ({ ...defaults, ...prev }));
     }
   }, [fields, currentUser]);
+
+  // Reset form data when initialData changes (edit mode switching between records)
+  useEffect(() => {
+    if (initialData) {
+      const defaults = computeAllDefaults(fields, currentUser);
+      setFormData({ ...defaults, ...initialData });
+      setErrors({});
+    }
+  }, [initialData, fields, currentUser]);
 
   const visibleFields = fields.filter(f => f.visible !== false);
 

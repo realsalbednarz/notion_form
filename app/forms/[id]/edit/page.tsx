@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TopNav from '@/components/TopNav';
-import { FieldConfig } from '@/types/form';
+import { FieldConfig, DesignTimeFilter } from '@/types/form';
 import {
   DndContext,
   closestCenter,
@@ -45,15 +45,25 @@ interface FormConfigData {
   mode: string;
   config: {
     fields: FieldConfig[];
+    permissions?: {
+      allowCreate?: boolean;
+      allowEdit?: boolean;
+      allowList?: boolean;
+    };
+    listConfig?: {
+      pageSize?: number;
+      filters?: DesignTimeFilter[];
+    };
   };
 }
 
-interface FieldConfigState extends FieldConfig {
+interface FieldConfigState extends Omit<FieldConfig, 'showInList'> {
   enabled: boolean;
   originalName: string;
   options?: { id: string; name: string; color: string }[];
   defaultValueType?: 'none' | 'static' | 'current_user' | 'current_date' | 'current_time';
   defaultValueStatic?: string;
+  showInList: boolean;
 }
 
 const TYPE_BADGES: Record<string, string> = {
@@ -188,7 +198,7 @@ function SortableFieldItem({
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -207,9 +217,19 @@ function SortableFieldItem({
                   onChange={(e) => onUpdate({ visible: e.target.checked })}
                   className="h-4 w-4 text-blue-600 rounded"
                 />
-                Visible
+                Show in Form
               </label>
             )}
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={field.showInList || false}
+                onChange={(e) => onUpdate({ showInList: e.target.checked })}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              Show in List
+            </label>
           </div>
 
           <div className="border-t pt-3 mt-3">
@@ -315,6 +335,15 @@ export default function EditFormPage() {
     added: string[];
   } | null>(null);
 
+  // Permissions state
+  const [allowCreate, setAllowCreate] = useState(true);
+  const [allowEdit, setAllowEdit] = useState(false);
+  const [allowList, setAllowList] = useState(false);
+
+  // List config state
+  const [listPageSize, setListPageSize] = useState(20);
+  const [listFilters, setListFilters] = useState<DesignTimeFilter[]>([]);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -339,6 +368,17 @@ export default function EditFormPage() {
         setFormConfig(formData.form);
         setFormName(formData.form.name);
         setFormDescription(formData.form.description || '');
+
+        // Load permissions
+        const permissions = formData.form.config.permissions || {};
+        setAllowCreate(permissions.allowCreate !== false);
+        setAllowEdit(permissions.allowEdit === true);
+        setAllowList(permissions.allowList === true);
+
+        // Load list config
+        const listConfig = formData.form.config.listConfig || {};
+        setListPageSize(listConfig.pageSize || 20);
+        setListFilters(listConfig.filters || []);
 
         const dbResponse = await fetch(`/api/notion/databases/${formData.form.databaseId}`);
         const dbData = await dbResponse.json();
@@ -373,6 +413,7 @@ export default function EditFormPage() {
             const prop = dbPropMap.get(sf.notionPropertyId) as Property;
             return {
               ...sf,
+              showInList: sf.showInList || false,  // Ensure default for older configs
               enabled: true,
               originalName: prop.name,
               options: prop.options,
@@ -393,6 +434,7 @@ export default function EditFormPage() {
             required: false,
             editable: !READ_ONLY_TYPES.includes(prop.type),
             visible: true,
+            showInList: false,
             options: prop.options,
           }));
 
@@ -453,6 +495,15 @@ export default function EditFormPage() {
       }
       return { ...field, defaultValue, options };
     }),
+    permissions: {
+      allowCreate,
+      allowEdit,
+      allowList,
+    },
+    listConfig: allowList ? {
+      pageSize: listPageSize,
+      filters: listFilters,
+    } : undefined,
   });
 
   const handleSave = async () => {
@@ -473,7 +524,8 @@ export default function EditFormPage() {
             sorts: [],
             pageSize: 20,
             layout: { showTitle: true },
-            permissions: { allowCreate: true, allowEdit: false, allowDelete: false },
+            permissions: updatedConfig.permissions,
+            listConfig: updatedConfig.listConfig,
           },
         }),
       });
@@ -635,6 +687,72 @@ export default function EditFormPage() {
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
+
+                  {/* Capabilities */}
+                  <div className="border-t pt-4 mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Form Capabilities
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={allowList}
+                          onChange={(e) => setAllowList(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm">Show list view</span>
+                        <span className="text-xs text-gray-500">(display records in a table)</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={allowCreate}
+                          onChange={(e) => setAllowCreate(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm">Allow create</span>
+                        <span className="text-xs text-gray-500">(add new records)</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={allowEdit}
+                          onChange={(e) => setAllowEdit(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm">Allow edit</span>
+                        <span className="text-xs text-gray-500">(modify existing records)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* List Config */}
+                  {allowList && (
+                    <div className="border-t pt-4 mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        List Settings
+                      </label>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Page Size
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={listPageSize}
+                            onChange={(e) => setListPageSize(Math.max(1, Math.min(100, parseInt(e.target.value) || 20)))}
+                            className="w-24 px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Enable "Show in List" on fields below to choose which columns appear in the table.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

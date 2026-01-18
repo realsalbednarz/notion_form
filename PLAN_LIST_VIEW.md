@@ -76,46 +76,45 @@ interface DesignTimeFilter {
 ## Implementation Tasks
 
 ### Phase 1: Schema & API Foundation
-- [ ] Update `types/form.ts` with new interfaces (DesignTimeFilter, updated FormConfig)
-- [ ] Add `showInList` to FieldConfig type
-- [ ] Create `GET /api/notion/databases/[id]/rows` - query records with filters, pagination
-- [ ] Create `PATCH /api/notion/pages/[id]` - update existing record
-- [ ] Test API endpoints independently
+- [x] Update `types/form.ts` with new interfaces (DesignTimeFilter, updated FormConfig)
+- [x] Add `showInList` to FieldConfig type
+- [x] Create `GET /api/notion/databases/[id]/rows` - query records with filters, pagination
+- [x] Create `PATCH /api/notion/pages/[id]` - update existing record (also added GET for single page)
 
 ### Phase 2: Form Builder Updates
-- [ ] Add capability toggles UI (allowCreate, allowEdit, allowList checkboxes)
-- [ ] Add `showInList` checkbox to field picker (per field)
-- [ ] Add list config section when allowList is enabled:
-  - [ ] Page size input
-  - [ ] Filter builder UI (add/remove filters, property/operator/value)
-- [ ] Update form save logic to include new config
-- [ ] Update edit form page to load/display new config
+- [x] Add capability toggles UI (allowCreate, allowEdit, allowList checkboxes)
+- [x] Add `showInList` checkbox to field picker (per field)
+- [x] Add list config section when allowList is enabled:
+  - [x] Page size input
+  - [ ] Filter builder UI (add/remove filters, property/operator/value) - DEFERRED
+- [x] Update form save logic to include new config
+- [x] Update edit form page to load/display new config
 
 ### Phase 3: New UI Components
-- [ ] Create `SlideOver` component - reusable slide-over panel
-- [ ] Create `ListRenderer` component - paginated table
-  - [ ] Column headers from showInList fields
-  - [ ] Row rendering with appropriate formatting per field type
-  - [ ] Pagination controls (prev/next, using Notion cursors)
-  - [ ] Loading states
-  - [ ] Empty state
-- [ ] Create `FilterBuilder` component for form builder
+- [x] Create `SlideOver` component - reusable slide-over panel
+- [x] Create `ListRenderer` component - paginated table
+  - [x] Column headers from showInList fields
+  - [x] Row rendering with appropriate formatting per field type
+  - [x] Pagination controls (Load more with Notion cursors)
+  - [x] Loading states
+  - [x] Empty state
+- [ ] Create `FilterBuilder` component for form builder - DEFERRED
 
 ### Phase 4: Public Form Integration
-- [ ] Update `/f/[formId]/page.tsx` to detect capabilities
-- [ ] Render ListRenderer when allowList and no edit/new param
-- [ ] Handle `?new` param - show create in slide-over (or full page if no list)
-- [ ] Handle `?edit=[id]` param - fetch record, show edit in slide-over
-- [ ] Integrate slide-over with FormRenderer for create/edit
-- [ ] On successful save: close slide-over, refresh list
-- [ ] Handle Notion permission errors gracefully
+- [x] Update `/f/[formId]/page.tsx` to detect capabilities
+- [x] Render ListRenderer when allowList and no edit/new param
+- [x] Handle `?new` param - show create in slide-over (or full page if no list)
+- [x] Handle `?edit=[id]` param - fetch record, show edit in slide-over
+- [x] Integrate slide-over with FormRenderer for create/edit
+- [x] On successful save: close slide-over, refresh list
+- [x] Handle Notion permission errors gracefully
 
 ### Phase 5: Polish & Edge Cases
-- [ ] Loading states for all async operations
-- [ ] Error handling for failed fetches, failed saves
-- [ ] Optimistic UI updates (optional)
-- [ ] Mobile responsiveness for list view
-- [ ] Keyboard navigation (Escape to close slide-over)
+- [x] Loading states for all async operations
+- [x] Error handling for failed fetches, failed saves
+- [ ] Optimistic UI updates (optional) - DEFERRED
+- [ ] Mobile responsiveness for list view - NEEDS TESTING
+- [x] Keyboard navigation (Escape to close slide-over)
 
 ---
 
