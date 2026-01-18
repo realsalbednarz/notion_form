@@ -88,6 +88,15 @@ export const NotionSortSchema = z.object({
 
 export type NotionSort = z.infer<typeof NotionSortSchema>;
 
+// Display titles for different form views
+export const DisplayTitlesSchema = z.object({
+  listTitle: z.string().optional(),    // Title shown in list view
+  createTitle: z.string().optional(),  // Title shown in create form
+  editTitle: z.string().optional(),    // Title shown in edit form
+});
+
+export type DisplayTitles = z.infer<typeof DisplayTitlesSchema>;
+
 // List configuration for list-enabled forms
 export const ListConfigSchema = z.object({
   pageSize: z.number().default(20),
@@ -116,6 +125,7 @@ export const FormConfigDataSchema = z.object({
     allowList: z.boolean().default(false),  // Enable list view
   }).default({}),
   listConfig: ListConfigSchema.optional(),  // Config for list view
+  displayTitles: DisplayTitlesSchema.optional(),  // Custom titles for views
 });
 
 export type FormConfigData = z.infer<typeof FormConfigDataSchema>;

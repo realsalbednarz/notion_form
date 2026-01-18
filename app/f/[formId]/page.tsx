@@ -15,6 +15,11 @@ interface FormConfig {
     allowList?: boolean;
   };
   listConfig?: ListConfig;
+  displayTitles?: {
+    listTitle?: string;
+    createTitle?: string;
+    editTitle?: string;
+  };
 }
 
 interface FormData {
@@ -281,8 +286,9 @@ export default function PublicFormPage() {
 
   if (!form) return null;
 
-  const { permissions = {}, listConfig } = form.config;
+  const { permissions = {}, listConfig, displayTitles = {} } = form.config;
   const { allowCreate = true, allowEdit = false, allowList = false } = permissions;
+  const { listTitle, createTitle, editTitle } = displayTitles;
 
   // Success state for create-only forms
   if (submitted && !allowList) {
@@ -314,18 +320,18 @@ export default function PublicFormPage() {
     const columns = getListColumns();
 
     return (
-      <main className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
+      <main className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+        <div className="w-full">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{form.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{listTitle || form.name}</h1>
             {form.description && (
               <p className="text-gray-600 mt-1">{form.description}</p>
             )}
           </div>
 
           {/* List */}
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white rounded-lg border p-6 overflow-hidden">
             <ListRenderer
               key={listKey}
               databaseId={form.databaseId}
@@ -348,7 +354,7 @@ export default function PublicFormPage() {
         <SlideOver
           isOpen={slideOverMode === 'create'}
           onClose={closeSlideOver}
-          title="Create New Record"
+          title={createTitle || 'Create New Record'}
         >
           <FormRenderer
             name=""
@@ -363,7 +369,7 @@ export default function PublicFormPage() {
         <SlideOver
           isOpen={slideOverMode === 'edit'}
           onClose={closeSlideOver}
-          title="Edit Record"
+          title={editTitle || 'Edit Record'}
         >
           {loadingRecord ? (
             <div className="flex items-center justify-center py-12">
@@ -390,7 +396,7 @@ export default function PublicFormPage() {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg border p-6 md:p-8">
           <FormRenderer
-            name={form.name}
+            name={createTitle || form.name}
             description={form.description || undefined}
             fields={form.config.fields}
             onSubmit={handleCreate}

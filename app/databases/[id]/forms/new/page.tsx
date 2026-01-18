@@ -314,6 +314,11 @@ export default function NewFormPage() {
   const [allowList, setAllowList] = useState(false);
   const [listPageSize, setListPageSize] = useState(20);
 
+  // Display titles
+  const [listTitle, setListTitle] = useState('');
+  const [createTitle, setCreateTitle] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -412,6 +417,11 @@ export default function NewFormPage() {
       allowList,
     },
     listConfig: allowList ? { pageSize: listPageSize } : undefined,
+    displayTitles: {
+      listTitle: listTitle || undefined,
+      createTitle: createTitle || undefined,
+      editTitle: editTitle || undefined,
+    },
   });
 
   const handleSave = async () => {
@@ -441,6 +451,7 @@ export default function NewFormPage() {
               allowList: formConfig.permissions.allowList,
             },
             listConfig: formConfig.listConfig,
+            displayTitles: formConfig.displayTitles,
           },
         }),
       });
@@ -625,6 +636,60 @@ export default function NewFormPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Display Titles */}
+                  <div className="border-t pt-4 mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Display Titles
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Customize the titles shown in different views. Leave blank to use the form name.
+                    </p>
+                    <div className="space-y-3">
+                      {allowList && (
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            List View Title
+                          </label>
+                          <input
+                            type="text"
+                            value={listTitle}
+                            onChange={(e) => setListTitle(e.target.value)}
+                            placeholder={formName || 'List title...'}
+                            className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                      {allowCreate && (
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Create Form Title
+                          </label>
+                          <input
+                            type="text"
+                            value={createTitle}
+                            onChange={(e) => setCreateTitle(e.target.value)}
+                            placeholder={allowList ? 'Create New Record' : formName || 'Create title...'}
+                            className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                      {allowEdit && (
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Edit Form Title
+                          </label>
+                          <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            placeholder="Edit Record"
+                            className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

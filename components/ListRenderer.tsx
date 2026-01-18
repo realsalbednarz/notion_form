@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FieldConfig, DesignTimeFilter } from '@/types/form';
 
 interface ListColumn {
@@ -26,6 +26,38 @@ interface ListRendererProps {
   onCreateClick?: () => void;
 }
 
+// Truncated cell with expand on hover
+function TruncatedCell({ children, maxWidth = 200 }: { children: React.ReactNode; maxWidth?: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setNeedsTruncation(contentRef.current.scrollWidth > contentRef.current.clientWidth);
+    }
+  }, [children]);
+
+  return (
+    <div className="relative">
+      <div
+        ref={contentRef}
+        className="truncate cursor-default"
+        style={{ maxWidth }}
+        onMouseEnter={() => needsTruncation && setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
+        {children}
+      </div>
+      {isExpanded && (
+        <div className="absolute z-50 left-0 top-full mt-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Format cell value for display
 function formatCellValue(type: string, value: any): React.ReactNode {
   if (value === null || value === undefined) {
@@ -38,7 +70,7 @@ function formatCellValue(type: string, value: any): React.ReactNode {
     case 'url':
     case 'email':
     case 'phone_number':
-      return <span className="truncate">{String(value)}</span>;
+      return <TruncatedCell>{String(value)}</TruncatedCell>;
 
     case 'number':
       return <span>{typeof value === 'number' ? value.toLocaleString() : value}</span>;
