@@ -357,13 +357,16 @@ export default function PublicFormPage() {
           onClose={closeSlideOver}
           title={createTitle || 'Create New Record'}
         >
-          <FormRenderer
-            name=""
-            fields={form.config.fields.filter(f => f.visible !== false)}
-            onSubmit={handleCreate}
-            submitLabel="Create"
-            currentUser={currentUser || undefined}
-          />
+          {slideOverMode === 'create' && (
+            <FormRenderer
+              key={`create-${listKey}`}
+              name=""
+              fields={form.config.fields.filter(f => f.visible !== false)}
+              onSubmit={handleCreate}
+              submitLabel="Create"
+              currentUser={currentUser || undefined}
+            />
+          )}
         </SlideOver>
 
         {/* Edit Slide-over */}
