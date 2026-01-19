@@ -236,13 +236,37 @@ function SortableFieldItem({
             </select>
 
             {field.defaultValueType === 'static' && (
-              <input
-                type={field.notionPropertyType === 'number' ? 'number' : 'text'}
-                value={field.defaultValueStatic || ''}
-                onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
-                placeholder="Enter default value"
-                className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
-              />
+              (field.notionPropertyType === 'select' || field.notionPropertyType === 'status') && field.options && field.options.length > 0 ? (
+                <select
+                  value={field.defaultValueStatic || ''}
+                  onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                >
+                  <option value="">Select default option...</option>
+                  {field.options.map((opt) => (
+                    <option key={opt.id} value={opt.name}>{opt.name}</option>
+                  ))}
+                </select>
+              ) : field.notionPropertyType === 'multi_select' && field.options && field.options.length > 0 ? (
+                <select
+                  value={field.defaultValueStatic || ''}
+                  onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                >
+                  <option value="">Select default option...</option>
+                  {field.options.map((opt) => (
+                    <option key={opt.id} value={opt.name}>{opt.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.notionPropertyType === 'number' ? 'number' : 'text'}
+                  value={field.defaultValueStatic || ''}
+                  onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                  placeholder="Enter default value"
+                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                />
+              )
             )}
 
             {field.defaultValueType === 'current_user' && (

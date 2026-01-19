@@ -256,13 +256,37 @@ function SortableFieldItem({
             </select>
 
             {field.defaultValueType === 'static' && (
-              <input
-                type={field.notionPropertyType === 'number' ? 'number' : 'text'}
-                value={field.defaultValueStatic || ''}
-                onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
-                placeholder="Enter default value"
-                className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
-              />
+              (field.notionPropertyType === 'select' || field.notionPropertyType === 'status') && field.options && field.options.length > 0 ? (
+                <select
+                  value={field.defaultValueStatic || ''}
+                  onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                >
+                  <option value="">Select default option...</option>
+                  {field.options.map((opt) => (
+                    <option key={opt.id} value={opt.name}>{opt.name}</option>
+                  ))}
+                </select>
+              ) : field.notionPropertyType === 'multi_select' && field.options && field.options.length > 0 ? (
+                <select
+                  value={field.defaultValueStatic || ''}
+                  onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                >
+                  <option value="">Select default option...</option>
+                  {field.options.map((opt) => (
+                    <option key={opt.id} value={opt.name}>{opt.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.notionPropertyType === 'number' ? 'number' : 'text'}
+                  value={field.defaultValueStatic || ''}
+                  onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
+                  placeholder="Enter default value"
+                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                />
+              )
             )}
 
             {field.defaultValueType === 'current_user' && (
@@ -432,12 +456,31 @@ export default function EditFormPage() {
           .filter((sf: FieldConfig) => dbPropMap.has(sf.notionPropertyId))
           .map((sf: FieldConfig) => {
             const prop = dbPropMap.get(sf.notionPropertyId) as Property;
+            // Extract default value type and static value from saved defaultValue
+            let defaultValueType: FieldConfigState['defaultValueType'] = 'none';
+            let defaultValueStatic: string | undefined = undefined;
+            if (sf.defaultValue) {
+              if (sf.defaultValue.type === 'static') {
+                defaultValueType = 'static';
+                defaultValueStatic = String(sf.defaultValue.value);
+              } else if (sf.defaultValue.type === 'function') {
+                if (sf.defaultValue.name === 'current_user') {
+                  defaultValueType = 'current_user';
+                } else if (sf.defaultValue.name === 'today') {
+                  defaultValueType = 'current_date';
+                } else if (sf.defaultValue.name === 'now') {
+                  defaultValueType = 'current_time';
+                }
+              }
+            }
             return {
               ...sf,
               showInList: sf.showInList !== false,  // Default to true for older configs
               enabled: true,
               originalName: prop.name,
               options: prop.options,
+              defaultValueType,
+              defaultValueStatic,
             };
           });
 

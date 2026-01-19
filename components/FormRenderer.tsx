@@ -65,8 +65,12 @@ function computeAllDefaults(
 ): Record<string, any> {
   const defaults: Record<string, any> = {};
   fields.forEach(field => {
-    const defaultVal = computeDefaultValue(field.defaultValue, currentUser);
+    let defaultVal = computeDefaultValue(field.defaultValue, currentUser);
     if (defaultVal !== undefined) {
+      // Multi-select fields need the default as an array
+      if (field.notionPropertyType === 'multi_select' && typeof defaultVal === 'string') {
+        defaultVal = [defaultVal];
+      }
       defaults[field.notionPropertyId] = defaultVal;
     }
   });

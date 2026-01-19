@@ -392,9 +392,9 @@ export default function ListRenderer({
             <table className="w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 {/* Expand arrow column */}
-                <col style={{ width: '32px' }} />
+                <col style={{ width: '24px' }} />
                 {/* Edit button column */}
-                {allowEdit && <col style={{ width: '50px' }} />}
+                {allowEdit && <col style={{ width: '44px' }} />}
                 {/* Data columns - use stored widths or auto */}
                 {columns.map((col) => (
                   <col
@@ -405,21 +405,21 @@ export default function ListRenderer({
               </colgroup>
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-1 py-2 text-left text-xs font-medium text-gray-500"></th>
+                  <th className="py-2 text-left text-xs font-medium text-gray-500"></th>
                   {allowEdit && (
-                    <th className="px-1 py-2 text-left text-xs font-medium text-gray-500"></th>
+                    <th className="py-2 text-left text-xs font-medium text-gray-500"></th>
                   )}
                   {columns.map((col) => (
                     <th
                       key={col.propertyId}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative group"
-                      title={col.label}
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative border-r border-gray-200"
+                      title={`${col.label} (drag edge to resize)`}
                       style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
                     >
                       {col.label}
                       {/* Resize handle */}
                       <div
-                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 opacity-0 group-hover:opacity-100"
+                        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 bg-transparent -mr-1"
                         onMouseDown={(e) => {
                           const th = e.currentTarget.parentElement;
                           const currentWidth = th?.offsetWidth || 150;
