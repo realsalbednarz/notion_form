@@ -8,7 +8,15 @@ export async function GET(request: NextRequest) {
   const adminUser = await getCurrentUser();
   const formUser = await getCurrentFormUser();
 
+  console.log('[Comments API] GET - Auth check:', {
+    hasAdminUser: !!adminUser,
+    hasFormUser: !!formUser,
+    adminUserId: adminUser?.id,
+    formUserEmail: formUser?.email,
+  });
+
   if (!adminUser && !formUser) {
+    console.log('[Comments API] GET - Unauthorized: no admin or form user');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -33,9 +41,13 @@ export async function GET(request: NextRequest) {
   try {
     const notion = new Client({ auth: notionApiKey });
 
+    console.log('[Comments API] Fetching comments for page:', pageId);
+
     const response = await notion.comments.list({
       block_id: pageId,
     });
+
+    console.log('[Comments API] Success - found', response.results.length, 'comments');
 
     const comments = response.results.map((comment: any) => ({
       id: comment.id,
@@ -55,15 +67,26 @@ export async function GET(request: NextRequest) {
       count: comments.length,
     });
   } catch (error: any) {
-    console.error('Error fetching comments:', error);
+    console.error('[Comments API] Error fetching comments:', {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      body: error.body,
+      fullError: JSON.stringify(error, null, 2),
+    });
 
     if (error.code === 'object_not_found') {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
+    // Return more detailed error for debugging
     return NextResponse.json(
-      { error: 'Failed to fetch comments' },
-      { status: 500 }
+      {
+        error: error.message || 'Failed to fetch comments',
+        code: error.code,
+        details: error.body || null,
+      },
+      { status: error.status || 500 }
     );
   }
 }
@@ -73,7 +96,13 @@ export async function POST(request: NextRequest) {
   const adminUser = await getCurrentUser();
   const formUser = await getCurrentFormUser();
 
+  console.log('[Comments API] POST - Auth check:', {
+    hasAdminUser: !!adminUser,
+    hasFormUser: !!formUser,
+  });
+
   if (!adminUser && !formUser) {
+    console.log('[Comments API] POST - Unauthorized: no admin or form user');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -98,6 +127,8 @@ export async function POST(request: NextRequest) {
 
     const notion = new Client({ auth: notionApiKey });
 
+    console.log('[Comments API] Creating comment on page:', pageId);
+
     const commentData: any = {
       parent: { page_id: pageId },
       rich_text: [
@@ -115,6 +146,8 @@ export async function POST(request: NextRequest) {
 
     const response = await notion.comments.create(commentData);
 
+    console.log('[Comments API] Comment created successfully:', response.id);
+
     return NextResponse.json({
       success: true,
       comment: {
@@ -125,7 +158,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error creating comment:', error);
+    console.error('[Comments API] Error creating comment:', {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      body: error.body,
+      fullError: JSON.stringify(error, null, 2),
+    });
 
     if (error.code === 'object_not_found') {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
@@ -146,10 +185,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return actual error message for debugging
+    // Return detailed error for debugging
     return NextResponse.json(
-      { error: error.message || 'Failed to create comment' },
-      { status: 500 }
+      {
+        error: error.message || 'Failed to create comment',
+        code: error.code,
+        details: error.body || null,
+      },
+      { status: error.status || 500 }
     );
   }
 }
