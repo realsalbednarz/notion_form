@@ -206,6 +206,57 @@ export default function ListRenderer({
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const resizingRef = useRef<{ columnId: string; startX: number; startWidth: number } | null>(null);
 
+  // Column visibility state
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(() => {
+    // Load from localStorage on mount
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`listview-hidden-${databaseId}`);
+      if (stored) {
+        try {
+          return new Set(JSON.parse(stored));
+        } catch {}
+      }
+    }
+    return new Set();
+  });
+  const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const columnMenuRef = useRef<HTMLDivElement>(null);
+
+  // Save hidden columns to localStorage when changed
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`listview-hidden-${databaseId}`, JSON.stringify([...hiddenColumns]));
+    }
+  }, [hiddenColumns, databaseId]);
+
+  // Close column menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (columnMenuRef.current && !columnMenuRef.current.contains(e.target as Node)) {
+        setShowColumnMenu(false);
+      }
+    };
+    if (showColumnMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showColumnMenu]);
+
+  const toggleColumnVisibility = (propertyId: string) => {
+    setHiddenColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(propertyId)) {
+        next.delete(propertyId);
+      } else {
+        next.add(propertyId);
+      }
+      return next;
+    });
+  };
+
+  // Filter columns based on visibility
+  const visibleColumns = columns.filter(col => !hiddenColumns.has(col.propertyId));
+
   // Handle column resize
   const handleResizeStart = (e: React.MouseEvent, columnId: string, currentWidth: number) => {
     e.preventDefault();
@@ -356,9 +407,60 @@ export default function ListRenderer({
 
   return (
     <div className="space-y-4">
-      {/* Header with Create button */}
-      {allowCreate && onCreateClick && (
-        <div className="flex justify-end">
+      {/* Header with Column visibility and Create button */}
+      <div className="flex justify-between items-center">
+        {/* Column visibility dropdown */}
+        <div className="relative" ref={columnMenuRef}>
+          <button
+            onClick={() => setShowColumnMenu(!showColumnMenu)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+            Columns
+            {hiddenColumns.size > 0 && (
+              <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+                {columns.length - hiddenColumns.size}/{columns.length}
+              </span>
+            )}
+          </button>
+
+          {showColumnMenu && (
+            <div className="absolute left-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
+              <div className="px-3 py-2 text-xs font-medium text-gray-500 border-b">
+                Toggle columns
+              </div>
+              {columns.map(col => (
+                <label
+                  key={col.propertyId}
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!hiddenColumns.has(col.propertyId)}
+                    onChange={() => toggleColumnVisibility(col.propertyId)}
+                    className="h-4 w-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">{col.label}</span>
+                </label>
+              ))}
+              {hiddenColumns.size > 0 && (
+                <div className="border-t mt-1 pt-1">
+                  <button
+                    onClick={() => setHiddenColumns(new Set())}
+                    className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-gray-50"
+                  >
+                    Show all columns
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Create button */}
+        {allowCreate && onCreateClick && (
           <button
             onClick={onCreateClick}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -368,16 +470,27 @@ export default function ListRenderer({
             </svg>
             New
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* No columns configured */}
-      {columns.length === 0 ? (
+      {/* No columns visible */}
+      {visibleColumns.length === 0 ? (
         <div className="text-center py-12 text-gray-500 border rounded-lg border-dashed">
-          <p className="font-medium">No columns configured</p>
-          <p className="text-sm mt-1">
-            Edit this form and enable "Show in List" on the fields you want to display.
-          </p>
+          {columns.length === 0 ? (
+            <>
+              <p className="font-medium">No columns configured</p>
+              <p className="text-sm mt-1">
+                Edit this form and enable "Show in List" on the fields you want to display.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium">All columns hidden</p>
+              <p className="text-sm mt-1">
+                Use the Columns button above to show some columns.
+              </p>
+            </>
+          )}
         </div>
       ) : rows.length === 0 ? (
         <div className="text-center py-12 text-gray-500 border rounded-lg">
@@ -396,7 +509,7 @@ export default function ListRenderer({
                 {/* Edit button column */}
                 {allowEdit && <col style={{ width: '44px' }} />}
                 {/* Data columns - use stored widths or auto */}
-                {columns.map((col) => (
+                {visibleColumns.map((col) => (
                   <col
                     key={col.propertyId}
                     style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
@@ -409,7 +522,7 @@ export default function ListRenderer({
                   {allowEdit && (
                     <th className="py-2 text-left text-xs font-medium text-gray-500"></th>
                   )}
-                  {columns.map((col) => (
+                  {visibleColumns.map((col) => (
                     <th
                       key={col.propertyId}
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative border-r border-gray-200"
@@ -433,7 +546,7 @@ export default function ListRenderer({
               <tbody className="bg-white divide-y divide-gray-200">
                 {rows.map((row) => {
                   const isExpanded = expandedRows.has(row.id);
-                  const colSpan = columns.length + 1 + (allowEdit ? 1 : 0);
+                  const colSpan = visibleColumns.length + 1 + (allowEdit ? 1 : 0);
                   return (
                     <React.Fragment key={row.id}>
                       <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
@@ -462,7 +575,7 @@ export default function ListRenderer({
                             </button>
                           </td>
                         )}
-                        {columns.map((col) => {
+                        {visibleColumns.map((col) => {
                           const prop = row.properties[col.propertyId];
                           return (
                             <td
@@ -491,7 +604,7 @@ export default function ListRenderer({
       )}
 
       {/* Pagination */}
-      {columns.length > 0 && hasMore && (
+      {visibleColumns.length > 0 && hasMore && (
         <div className="flex justify-center">
           <button
             onClick={handleLoadMore}
@@ -504,7 +617,7 @@ export default function ListRenderer({
       )}
 
       {/* Row count */}
-      {columns.length > 0 && (
+      {visibleColumns.length > 0 && (
         <div className="text-sm text-gray-500 text-center">
           {rows.length} record{rows.length !== 1 ? 's' : ''}{hasMore ? '+' : ''} shown
         </div>
