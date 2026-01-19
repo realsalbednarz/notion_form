@@ -71,8 +71,6 @@ export default function FormPreviewPage() {
   }, []);
 
   const handleSubmit = async (data: Record<string, any>) => {
-    console.log('Form submitted:', data);
-
     if (!liveMode) {
       // Preview mode - just show the data
       setResult({ mode: 'preview', data });

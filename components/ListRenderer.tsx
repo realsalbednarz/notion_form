@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FieldConfig, DesignTimeFilter } from '@/types/form';
+import { DesignTimeFilter } from '@/types/form';
 import { CommentPreview } from './CommentsPanel';
 
 interface ListColumn {
