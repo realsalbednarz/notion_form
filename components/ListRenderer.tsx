@@ -222,6 +222,9 @@ export default function ListRenderer({
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const columnMenuRef = useRef<HTMLDivElement>(null);
 
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ propertyId: string; direction: 'ascending' | 'descending' } | null>(null);
+
   // Save hidden columns to localStorage when changed
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -256,6 +259,22 @@ export default function ListRenderer({
 
   // Filter columns based on visibility
   const visibleColumns = columns.filter(col => !hiddenColumns.has(col.propertyId));
+
+  // Handle column sort click
+  const handleSortClick = (propertyId: string) => {
+    setSortConfig(prev => {
+      if (prev?.propertyId === propertyId) {
+        // Toggle direction or clear if already descending
+        if (prev.direction === 'ascending') {
+          return { propertyId, direction: 'descending' };
+        } else {
+          return null; // Clear sort
+        }
+      }
+      // New sort column - start with ascending
+      return { propertyId, direction: 'ascending' };
+    });
+  };
 
   // Handle column resize
   const handleResizeStart = (e: React.MouseEvent, columnId: string, currentWidth: number) => {
@@ -301,6 +320,10 @@ export default function ListRenderer({
       if (filters.length > 0) {
         params.set('filters', JSON.stringify(filters));
       }
+      if (sortConfig) {
+        params.set('sort_property', sortConfig.propertyId);
+        params.set('sort_direction', sortConfig.direction);
+      }
 
       const response = await fetch(
         `/api/notion/databases/${databaseId}/rows?${params.toString()}`
@@ -315,7 +338,7 @@ export default function ListRenderer({
     } catch (err) {
       throw err;
     }
-  }, [databaseId, pageSize, filters]);
+  }, [databaseId, pageSize, filters, sortConfig]);
 
   // Initial load
   useEffect(() => {
@@ -522,25 +545,53 @@ export default function ListRenderer({
                   {allowEdit && (
                     <th className="py-2 text-left text-xs font-medium text-gray-500"></th>
                   )}
-                  {visibleColumns.map((col) => (
-                    <th
-                      key={col.propertyId}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative border-r border-gray-200"
-                      title={`${col.label} (drag edge to resize)`}
-                      style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
-                    >
-                      {col.label}
-                      {/* Resize handle */}
-                      <div
-                        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 bg-transparent -mr-1"
-                        onMouseDown={(e) => {
-                          const th = e.currentTarget.parentElement;
-                          const currentWidth = th?.offsetWidth || 150;
-                          handleResizeStart(e, col.propertyId, currentWidth);
-                        }}
-                      />
-                    </th>
-                  ))}
+                  {visibleColumns.map((col) => {
+                    const isSorted = sortConfig?.propertyId === col.propertyId;
+                    const sortDirection = isSorted ? sortConfig.direction : null;
+                    return (
+                      <th
+                        key={col.propertyId}
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative border-r border-gray-200 select-none"
+                        style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
+                      >
+                        <button
+                          onClick={() => handleSortClick(col.propertyId)}
+                          className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+                          title={`Sort by ${col.label}`}
+                        >
+                          <span className="truncate">{col.label}</span>
+                          {/* Sort indicator */}
+                          {isSorted ? (
+                            <svg
+                              className={`w-3 h-3 flex-shrink-0 ${sortDirection === 'descending' ? 'rotate-180' : ''}`}
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M5 10l5-5 5 5H5z" />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-30"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M5 10l5-5 5 5H5z" />
+                            </svg>
+                          )}
+                        </button>
+                        {/* Resize handle */}
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 bg-transparent -mr-1"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            const th = e.currentTarget.parentElement;
+                            const currentWidth = th?.offsetWidth || 150;
+                            handleResizeStart(e, col.propertyId, currentWidth);
+                          }}
+                        />
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">

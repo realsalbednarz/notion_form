@@ -208,6 +208,8 @@ export async function GET(
     const pageSize = Math.min(parseInt(searchParams.get('page_size') || '20'), 100);
     const startCursor = searchParams.get('start_cursor') || undefined;
     const filtersParam = searchParams.get('filters');
+    const sortProperty = searchParams.get('sort_property') || undefined;
+    const sortDirection = searchParams.get('sort_direction') as 'ascending' | 'descending' | undefined;
 
     let filters: DesignTimeFilter[] = [];
     if (filtersParam) {
@@ -235,6 +237,16 @@ export async function GET(
     const notionFilter = buildNotionFilter(filters);
     if (notionFilter) {
       queryParams.filter = notionFilter;
+    }
+
+    // Add sorting if specified
+    if (sortProperty && sortDirection) {
+      queryParams.sorts = [
+        {
+          property: sortProperty,
+          direction: sortDirection,
+        },
+      ];
     }
 
     const response = await notion.databases.query(queryParams);
