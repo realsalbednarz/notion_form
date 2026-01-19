@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { DesignTimeFilter } from '@/types/form';
 import { CommentPreview } from './CommentsPanel';
 
@@ -28,36 +29,55 @@ interface ListRendererProps {
   onCreateClick?: () => void;
 }
 
-// Truncated cell with expand on hover
+// Truncated cell with expand on hover - uses portal to escape table overflow
 function TruncatedCell({ children }: { children: React.ReactNode }) {
   const [isHovered, setIsHovered] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (contentRef.current) {
-      // Check if content overflows
       setNeedsTruncation(contentRef.current.scrollWidth > contentRef.current.clientWidth);
     }
   }, [children]);
+
+  const handleMouseEnter = () => {
+    if (needsTruncation && contentRef.current) {
+      const rect = contentRef.current.getBoundingClientRect();
+      setTooltipPos({
+        top: rect.top + window.scrollY - 8,
+        left: rect.left + window.scrollX,
+      });
+      setIsHovered(true);
+    }
+  };
 
   return (
     <div className="relative">
       <div
         ref={contentRef}
-        className="truncate"
-        onMouseEnter={() => needsTruncation && setIsHovered(true)}
+        className="truncate cursor-default"
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setIsHovered(false)}
       >
         {children}
       </div>
-      {isHovered && (
+      {isHovered && typeof document !== 'undefined' && createPortal(
         <div
-          className="absolute left-0 bottom-full mb-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal"
-          style={{ zIndex: 9999 }}
+          className="fixed p-3 bg-white border rounded-lg shadow-xl max-w-sm break-words whitespace-normal text-sm"
+          style={{
+            top: tooltipPos.top,
+            left: tooltipPos.left,
+            transform: 'translateY(-100%)',
+            zIndex: 99999,
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           {children}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
