@@ -52,7 +52,10 @@ function TruncatedCell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       {isHovered && (
-        <div className="absolute left-0 top-full mt-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal" style={{ zIndex: 9999 }}>
+        <div
+          className="absolute left-0 bottom-full mb-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal"
+          style={{ zIndex: 9999 }}
+        >
           {children}
         </div>
       )}
@@ -405,7 +408,7 @@ export default function ListRenderer({
                           return (
                             <td
                               key={col.propertyId}
-                              className="px-4 py-3 text-sm text-gray-900 overflow-hidden"
+                              className="px-4 py-3 text-sm text-gray-900"
                             >
                               {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
                             </td>
