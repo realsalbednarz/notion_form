@@ -22,8 +22,8 @@ interface CommentsPanelProps {
 export default function CommentsPanel({ pageId, collapsed = true }: CommentsPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true); // Start true to fetch initial count
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
@@ -42,7 +42,7 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
 
   const fetchComments = async () => {
     setLoading(true);
-    setError(null);
+    setFetchError(null);
     try {
       const response = await fetch(`/api/notion/comments?page_id=${pageId}`);
       const data = await response.json();
@@ -53,7 +53,7 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
 
       setComments(data.comments || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load comments');
+      setFetchError(err instanceof Error ? err.message : 'Failed to load comments');
     } finally {
       setLoading(false);
       setInitialFetchDone(true);
@@ -121,7 +121,9 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
     return (
       <div className="border-t mt-6 pt-4">
         <div className="text-sm font-medium text-gray-700 mb-3">Comments</div>
-        <div className="text-sm text-gray-500 mb-3">No comments yet</div>
+        <div className="text-sm text-gray-500 mb-3">
+          {fetchError ? 'Could not load comments' : 'No comments yet'}
+        </div>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
@@ -169,8 +171,8 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
             <div className="text-sm text-gray-500">Loading comments...</div>
           )}
 
-          {error && (
-            <div className="text-sm text-red-500">{error}</div>
+          {fetchError && (
+            <div className="text-sm text-gray-500">{fetchError}</div>
           )}
 
           {/* Comments list */}
