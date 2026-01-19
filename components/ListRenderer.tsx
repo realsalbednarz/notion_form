@@ -16,7 +16,7 @@ interface RowData {
   properties: Record<string, { type: string; value: any }>;
 }
 
-// Row expand button - only shows if row has comments
+// Row expand button - only shows if row has comments (or if we couldn't check)
 function RowExpandButton({
   pageId,
   isExpanded,
@@ -27,30 +27,45 @@ function RowExpandButton({
   onToggle: () => void;
 }) {
   const [commentCount, setCommentCount] = useState<number | null>(null);
+  const [fetchFailed, setFetchFailed] = useState(false);
 
   useEffect(() => {
     fetch(`/api/notion/comments?page_id=${pageId}`)
-      .then(res => res.json())
-      .then(data => setCommentCount(data.count || 0))
-      .catch(() => setCommentCount(0));
+      .then(res => {
+        if (!res.ok) {
+          setFetchFailed(true);
+          setCommentCount(0);
+          return;
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data) {
+          setCommentCount(data.count || 0);
+        }
+      })
+      .catch(() => {
+        setFetchFailed(true);
+        setCommentCount(0);
+      });
   }, [pageId]);
 
-  // Still loading - show nothing
+  // Still loading - show placeholder
   if (commentCount === null) {
     return <div className="w-5 h-5" />;
   }
 
-  // No comments - show nothing (just placeholder for alignment)
-  if (commentCount === 0) {
+  // No comments and fetch succeeded - show nothing
+  if (commentCount === 0 && !fetchFailed) {
     return <div className="w-5 h-5" />;
   }
 
-  // Has comments - show expand button with count
+  // Has comments OR fetch failed (show arrow so user can try to expand)
   return (
     <button
       onClick={onToggle}
       className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-      title={`${commentCount} comment${commentCount !== 1 ? 's' : ''} - click to ${isExpanded ? 'collapse' : 'expand'}`}
+      title={fetchFailed ? 'Click to view comments' : `${commentCount} comment${commentCount !== 1 ? 's' : ''} - click to ${isExpanded ? 'collapse' : 'expand'}`}
     >
       <svg
         className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -59,7 +74,9 @@ function RowExpandButton({
       >
         <path d="M6 4l8 6-8 6V4z" />
       </svg>
-      <span className="text-xs">{commentCount}</span>
+      {!fetchFailed && commentCount > 0 && (
+        <span className="text-xs">{commentCount}</span>
+      )}
     </button>
   );
 }
@@ -89,7 +106,7 @@ function TruncatedCell({ children }: { children: React.ReactNode }) {
   }, [children]);
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative">
       <div
         ref={contentRef}
         className="truncate"

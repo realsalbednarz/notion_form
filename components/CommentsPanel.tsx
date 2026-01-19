@@ -116,6 +116,22 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
     );
   }
 
+  // Show error state if fetch failed
+  if (error && comments.length === 0) {
+    return (
+      <div className="border-t mt-6 pt-4">
+        <div className="text-sm font-medium text-gray-700 mb-3">Comments</div>
+        <div className="text-sm text-red-500 mb-3">{error}</div>
+        <button
+          onClick={() => fetchComments()}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
   // If no comments exist, show a simple "No comments" message with add form
   if (initialFetchDone && comments.length === 0) {
     return (
@@ -138,9 +154,6 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
             {submitting ? '...' : 'Add'}
           </button>
         </form>
-        {error && (
-          <div className="text-sm text-red-500 mt-2">{error}</div>
-        )}
       </div>
     );
   }
