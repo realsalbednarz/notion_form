@@ -52,7 +52,7 @@ function TruncatedCell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       {isHovered && (
-        <div className="absolute z-50 left-0 top-full mt-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal">
+        <div className="absolute left-0 top-full mt-1 p-2 bg-white border rounded-lg shadow-lg max-w-md break-words whitespace-normal" style={{ zIndex: 9999 }}>
           {children}
         </div>
       )}
