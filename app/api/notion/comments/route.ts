@@ -138,8 +138,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (error.code === 'unauthorized') {
+      return NextResponse.json(
+        { error: 'Integration does not have permission to create comments. Enable "Insert comments" in your Notion integration settings.' },
+        { status: 403 }
+      );
+    }
+
+    // Return actual error message for debugging
     return NextResponse.json(
-      { error: 'Failed to create comment' },
+      { error: error.message || 'Failed to create comment' },
       { status: 500 }
     );
   }

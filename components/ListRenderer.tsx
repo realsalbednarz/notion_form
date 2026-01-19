@@ -16,8 +16,16 @@ interface RowData {
   properties: Record<string, { type: string; value: any }>;
 }
 
-// Comment count badge component
-function CommentCountBadge({ pageId }: { pageId: string }) {
+// Comment count badge component with expand functionality
+function CommentCell({
+  pageId,
+  isExpanded,
+  onToggle
+}: {
+  pageId: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -27,16 +35,41 @@ function CommentCountBadge({ pageId }: { pageId: string }) {
       .catch(() => setCount(0));
   }, [pageId]);
 
-  if (count === null) return null;
-  if (count === 0) return null;
+  // Still loading
+  if (count === null) {
+    return <span className="text-xs text-gray-300">...</span>;
+  }
 
+  // No comments - just show empty state, no expand
+  if (count === 0) {
+    return (
+      <span className="text-xs text-gray-300" title="No comments">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </span>
+    );
+  }
+
+  // Has comments - show count and expand button
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-gray-500" title={`${count} comment${count !== 1 ? 's' : ''}`}>
+    <button
+      onClick={onToggle}
+      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+      title={`${count} comment${count !== 1 ? 's' : ''} - click to ${isExpanded ? 'collapse' : 'expand'}`}
+    >
+      <svg
+        className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M6 4l8 6-8 6V4z" />
+      </svg>
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
       {count}
-    </span>
+    </button>
   );
 }
 
@@ -362,23 +395,23 @@ export default function ListRenderer({
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200 table-fixed">
+            <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-2 py-3 w-10"></th>
                   {allowEdit && (
-                    <th className="px-2 py-3 w-16"></th>
+                    <th className="px-3 py-3 w-16 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                   )}
-                  {columns.map((col, index) => (
+                  {columns.map((col) => (
                     <th
                       key={col.propertyId}
-                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        index === 0 ? 'w-1/4' : ''
-                      }`}
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       {col.label}
                     </th>
                   ))}
+                  <th className="px-3 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Comments
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -388,26 +421,8 @@ export default function ListRenderer({
                   return (
                     <React.Fragment key={row.id}>
                       <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
-                        <td className="px-2 py-3 w-10">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => toggleRowExpanded(row.id)}
-                              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-                              title={isExpanded ? 'Collapse row' : 'Expand row'}
-                            >
-                              <svg
-                                className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M6 4l8 6-8 6V4z" />
-                              </svg>
-                            </button>
-                            <CommentCountBadge pageId={row.id} />
-                          </div>
-                        </td>
                         {allowEdit && onEditClick && (
-                          <td className="px-2 py-3 w-16">
+                          <td className="px-3 py-3 w-16">
                             <button
                               onClick={() => onEditClick(row.id)}
                               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -421,12 +436,19 @@ export default function ListRenderer({
                           return (
                             <td
                               key={col.propertyId}
-                              className="px-4 py-3 text-sm text-gray-900 overflow-hidden"
+                              className="px-4 py-3 text-sm text-gray-900"
                             >
                               {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
                             </td>
                           );
                         })}
+                        <td className="px-3 py-3 w-20 text-right">
+                          <CommentCell
+                            pageId={row.id}
+                            isExpanded={isExpanded}
+                            onToggle={() => toggleRowExpanded(row.id)}
+                          />
+                        </td>
                       </tr>
                       {isExpanded && (
                         <tr className="bg-blue-50/30">
