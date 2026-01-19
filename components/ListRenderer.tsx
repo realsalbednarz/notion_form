@@ -16,45 +16,6 @@ interface RowData {
   properties: Record<string, { type: string; value: any }>;
 }
 
-// Row expand button with comment count
-function RowExpandButton({
-  pageId,
-  isExpanded,
-  onToggle
-}: {
-  pageId: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-}) {
-  const [commentCount, setCommentCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/notion/comments?page_id=${pageId}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => setCommentCount(data?.count || 0))
-      .catch(() => setCommentCount(0));
-  }, [pageId]);
-
-  // Always show the expand button
-  return (
-    <button
-      onClick={onToggle}
-      className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-      title={isExpanded ? 'Collapse' : 'Expand to see comments'}
-    >
-      <svg
-        className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path d="M6 4l8 6-8 6V4z" />
-      </svg>
-      {commentCount !== null && commentCount > 0 && (
-        <span className="text-xs">{commentCount}</span>
-      )}
-    </button>
-  );
-}
 
 interface ListRendererProps {
   databaseId: string;
@@ -415,11 +376,19 @@ export default function ListRenderer({
                     <React.Fragment key={row.id}>
                       <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
                         <td className="px-2 py-3 align-top">
-                          <RowExpandButton
-                            pageId={row.id}
-                            isExpanded={isExpanded}
-                            onToggle={() => toggleRowExpanded(row.id)}
-                          />
+                          <button
+                            onClick={() => toggleRowExpanded(row.id)}
+                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                            title={isExpanded ? 'Collapse row' : 'Expand row'}
+                          >
+                            <svg
+                              className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M6 4l8 6-8 6V4z" />
+                            </svg>
+                          </button>
                         </td>
                         {allowEdit && onEditClick && (
                           <td className="px-2 py-3 align-top">
