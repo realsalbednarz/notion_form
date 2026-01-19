@@ -477,7 +477,6 @@ export default function ListRenderer({
                       {isExpanded && (
                         <tr className="bg-blue-50/30">
                           <td colSpan={colSpan} className="px-4 py-3 border-t border-blue-100">
-                            <div className="text-xs text-gray-500 font-medium mb-1">Latest Comment:</div>
                             <CommentPreview pageId={row.id} />
                           </td>
                         </tr>

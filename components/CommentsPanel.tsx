@@ -230,45 +230,201 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
   );
 }
 
-// Compact version for list view expanded rows
+// Compact version for list view expanded rows - with expandable comments
 export function CommentPreview({ pageId }: { pageId: string }) {
-  const [comment, setComment] = useState<Comment | null>(null);
-  const [count, setCount] = useState(0);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch(`/api/notion/comments?page_id=${pageId}`)
       .then(res => res.json())
       .then(data => {
         if (data.comments && data.comments.length > 0) {
-          // Get the latest comment (last in array)
-          setComment(data.comments[data.comments.length - 1]);
-          setCount(data.comments.length);
+          setComments(data.comments);
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [pageId]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || submitting) return;
+
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/notion/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pageId,
+          content: newComment.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add comment');
+      }
+
+      // Add the new comment to the list
+      setComments(prev => [...prev, {
+        id: data.comment.id,
+        discussionId: data.comment.discussionId,
+        createdTime: data.comment.createdTime,
+        createdBy: { id: '', name: 'You', avatarUrl: undefined },
+        plainText: newComment.trim(),
+      }]);
+      setNewComment('');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to add comment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   if (loading) {
     return <span className="text-xs text-gray-400">Loading...</span>;
   }
 
-  if (!comment) {
-    return <span className="text-xs text-gray-400 italic">No comments</span>;
+  if (comments.length === 0) {
+    return (
+      <div>
+        <span className="text-xs text-gray-400 italic">No comments</span>
+        {expanded ? (
+          <form onSubmit={handleSubmit} className="flex gap-2 mt-2">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              className="flex-1 px-2 py-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              disabled={!newComment.trim() || submitting}
+              className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {submitting ? '...' : 'Add'}
+            </button>
+          </form>
+        ) : (
+          <button
+            onClick={() => setExpanded(true)}
+            className="text-xs text-blue-600 hover:text-blue-800 ml-2"
+          >
+            Add comment
+          </button>
+        )}
+      </div>
+    );
   }
 
+  const latestComment = comments[comments.length - 1];
+  const count = comments.length;
+
+  // Collapsed view - show latest comment only
+  if (!expanded) {
+    return (
+      <div className="text-xs">
+        <span className="text-gray-500">{latestComment.createdBy.name}: </span>
+        <span className="text-gray-700">
+          {latestComment.plainText.length > 100
+            ? latestComment.plainText.substring(0, 100) + '...'
+            : latestComment.plainText}
+        </span>
+        {count > 1 ? (
+          <button
+            onClick={() => setExpanded(true)}
+            className="text-blue-600 hover:text-blue-800 ml-2"
+          >
+            View all ({count})
+          </button>
+        ) : (
+          <button
+            onClick={() => setExpanded(true)}
+            className="text-blue-600 hover:text-blue-800 ml-2"
+          >
+            Reply
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Expanded view - show all comments
   return (
-    <div className="text-xs">
-      <span className="text-gray-500">{comment.createdBy.name}: </span>
-      <span className="text-gray-700">
-        {comment.plainText.length > 100
-          ? comment.plainText.substring(0, 100) + '...'
-          : comment.plainText}
-      </span>
-      {count > 1 && (
-        <span className="text-gray-400 ml-1">(+{count - 1} more)</span>
-      )}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-gray-600">All Comments ({count})</span>
+        <button
+          onClick={() => setExpanded(false)}
+          className="text-xs text-gray-500 hover:text-gray-700"
+        >
+          Collapse
+        </button>
+      </div>
+
+      <div className="space-y-2 max-h-48 overflow-y-auto">
+        {comments.map((comment) => (
+          <div key={comment.id} className="bg-white rounded p-2 border border-gray-100">
+            <div className="flex items-center gap-2 mb-1">
+              {comment.createdBy.avatarUrl ? (
+                <img
+                  src={comment.createdBy.avatarUrl}
+                  alt=""
+                  className="w-4 h-4 rounded-full"
+                />
+              ) : (
+                <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center text-[10px] text-gray-600">
+                  {comment.createdBy.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="text-[10px] font-medium text-gray-700">
+                {comment.createdBy.name}
+              </span>
+              <span className="text-[10px] text-gray-400">
+                {formatDate(comment.createdTime)}
+              </span>
+            </div>
+            <p className="text-xs text-gray-800 whitespace-pre-wrap">
+              {comment.plainText}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Add comment form */}
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          type="text"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment..."
+          className="flex-1 px-2 py-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        />
+        <button
+          type="submit"
+          disabled={!newComment.trim() || submitting}
+          className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {submitting ? '...' : 'Add'}
+        </button>
+      </form>
     </div>
   );
 }
