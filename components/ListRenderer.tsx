@@ -202,6 +202,32 @@ export default function ListRenderer({
   const [loadingMore, setLoadingMore] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  // Column widths state (in pixels, null means auto)
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const resizingRef = useRef<{ columnId: string; startX: number; startWidth: number } | null>(null);
+
+  // Handle column resize
+  const handleResizeStart = (e: React.MouseEvent, columnId: string, currentWidth: number) => {
+    e.preventDefault();
+    resizingRef.current = { columnId, startX: e.clientX, startWidth: currentWidth };
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+  };
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizingRef.current) return;
+    const { columnId, startX, startWidth } = resizingRef.current;
+    const diff = e.clientX - startX;
+    const newWidth = Math.max(80, startWidth + diff); // Min 80px
+    setColumnWidths(prev => ({ ...prev, [columnId]: newWidth }));
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    resizingRef.current = null;
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
+  }, [handleResizeMove]);
+
   const toggleRowExpanded = (rowId: string) => {
     setExpandedRows(prev => {
       const next = new Set(prev);
@@ -365,28 +391,41 @@ export default function ListRenderer({
           <div className="overflow-x-auto">
             <table className="w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
               <colgroup>
-                {/* Comments expand column */}
-                <col style={{ width: '60px' }} />
+                {/* Expand arrow column */}
+                <col style={{ width: '32px' }} />
                 {/* Edit button column */}
-                {allowEdit && <col style={{ width: '60px' }} />}
-                {/* Data columns - distribute remaining space equally */}
+                {allowEdit && <col style={{ width: '50px' }} />}
+                {/* Data columns - use stored widths or auto */}
                 {columns.map((col) => (
-                  <col key={col.propertyId} />
+                  <col
+                    key={col.propertyId}
+                    style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
+                  />
                 ))}
               </colgroup>
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500"></th>
+                  <th className="px-1 py-2 text-left text-xs font-medium text-gray-500"></th>
                   {allowEdit && (
-                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500"></th>
+                    <th className="px-1 py-2 text-left text-xs font-medium text-gray-500"></th>
                   )}
                   {columns.map((col) => (
                     <th
                       key={col.propertyId}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative group"
                       title={col.label}
+                      style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
                     >
                       {col.label}
+                      {/* Resize handle */}
+                      <div
+                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 opacity-0 group-hover:opacity-100"
+                        onMouseDown={(e) => {
+                          const th = e.currentTarget.parentElement;
+                          const currentWidth = th?.offsetWidth || 150;
+                          handleResizeStart(e, col.propertyId, currentWidth);
+                        }}
+                      />
                     </th>
                   ))}
                 </tr>
@@ -398,7 +437,7 @@ export default function ListRenderer({
                   return (
                     <React.Fragment key={row.id}>
                       <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
-                        <td className="px-2 py-3 align-top">
+                        <td className="px-1 py-2 align-top">
                           <button
                             onClick={() => toggleRowExpanded(row.id)}
                             className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
@@ -414,10 +453,10 @@ export default function ListRenderer({
                           </button>
                         </td>
                         {allowEdit && onEditClick && (
-                          <td className="px-2 py-3 align-top">
+                          <td className="px-1 py-2 align-top">
                             <button
                               onClick={() => onEditClick(row.id)}
-                              className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+                              className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors whitespace-nowrap"
                             >
                               Edit
                             </button>

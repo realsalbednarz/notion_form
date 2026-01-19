@@ -145,7 +145,14 @@ export default function FormRenderer({
       const value = formData[field.notionPropertyId];
 
       if (field.required) {
-        if (value === undefined || value === null || value === '') {
+        // Check for empty values - handle different types
+        const isEmpty =
+          value === undefined ||
+          value === null ||
+          value === '' ||
+          (Array.isArray(value) && value.length === 0);
+
+        if (isEmpty) {
           newErrors[field.notionPropertyId] = `${field.label} is required`;
         }
       }
