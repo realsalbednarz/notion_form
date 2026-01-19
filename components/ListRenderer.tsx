@@ -16,8 +16,8 @@ interface RowData {
   properties: Record<string, { type: string; value: any }>;
 }
 
-// Comment count badge component with expand functionality
-function CommentCell({
+// Row expand button - only shows if row has comments
+function RowExpandButton({
   pageId,
   isExpanded,
   onToggle
@@ -26,37 +26,31 @@ function CommentCell({
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const [count, setCount] = useState<number | null>(null);
+  const [commentCount, setCommentCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`/api/notion/comments?page_id=${pageId}`)
       .then(res => res.json())
-      .then(data => setCount(data.count || 0))
-      .catch(() => setCount(0));
+      .then(data => setCommentCount(data.count || 0))
+      .catch(() => setCommentCount(0));
   }, [pageId]);
 
-  // Still loading
-  if (count === null) {
-    return <span className="text-xs text-gray-300">...</span>;
+  // Still loading - show nothing
+  if (commentCount === null) {
+    return <div className="w-5 h-5" />;
   }
 
-  // No comments - just show empty state, no expand
-  if (count === 0) {
-    return (
-      <span className="text-xs text-gray-300" title="No comments">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      </span>
-    );
+  // No comments - show nothing (just placeholder for alignment)
+  if (commentCount === 0) {
+    return <div className="w-5 h-5" />;
   }
 
-  // Has comments - show count and expand button
+  // Has comments - show expand button with count
   return (
     <button
       onClick={onToggle}
-      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
-      title={`${count} comment${count !== 1 ? 's' : ''} - click to ${isExpanded ? 'collapse' : 'expand'}`}
+      className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+      title={`${commentCount} comment${commentCount !== 1 ? 's' : ''} - click to ${isExpanded ? 'collapse' : 'expand'}`}
     >
       <svg
         className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -65,10 +59,7 @@ function CommentCell({
       >
         <path d="M6 4l8 6-8 6V4z" />
       </svg>
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-      </svg>
-      {count}
+      <span className="text-xs">{commentCount}</span>
     </button>
   );
 }
@@ -92,15 +83,16 @@ function TruncatedCell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (contentRef.current) {
+      // Check if content overflows
       setNeedsTruncation(contentRef.current.scrollWidth > contentRef.current.clientWidth);
     }
   }, [children]);
 
   return (
-    <div className="relative w-full">
+    <div className="relative overflow-hidden">
       <div
         ref={contentRef}
-        className="truncate cursor-default"
+        className="truncate"
         onMouseEnter={() => needsTruncation && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -395,23 +387,32 @@ export default function ListRenderer({
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200">
+            <table className="w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                {/* Comments expand column */}
+                <col style={{ width: '60px' }} />
+                {/* Edit button column */}
+                {allowEdit && <col style={{ width: '60px' }} />}
+                {/* Data columns - distribute remaining space equally */}
+                {columns.map((col) => (
+                  <col key={col.propertyId} />
+                ))}
+              </colgroup>
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500"></th>
                   {allowEdit && (
-                    <th className="px-3 py-3 w-16 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500"></th>
                   )}
                   {columns.map((col) => (
                     <th
                       key={col.propertyId}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate"
+                      title={col.label}
                     >
                       {col.label}
                     </th>
                   ))}
-                  <th className="px-3 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Comments
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -421,11 +422,18 @@ export default function ListRenderer({
                   return (
                     <React.Fragment key={row.id}>
                       <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
+                        <td className="px-2 py-3 align-top">
+                          <RowExpandButton
+                            pageId={row.id}
+                            isExpanded={isExpanded}
+                            onToggle={() => toggleRowExpanded(row.id)}
+                          />
+                        </td>
                         {allowEdit && onEditClick && (
-                          <td className="px-3 py-3 w-16">
+                          <td className="px-2 py-3 align-top">
                             <button
                               onClick={() => onEditClick(row.id)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
                             >
                               Edit
                             </button>
@@ -436,19 +444,12 @@ export default function ListRenderer({
                           return (
                             <td
                               key={col.propertyId}
-                              className="px-4 py-3 text-sm text-gray-900"
+                              className="px-4 py-3 text-sm text-gray-900 overflow-hidden"
                             >
                               {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
                             </td>
                           );
                         })}
-                        <td className="px-3 py-3 w-20 text-right">
-                          <CommentCell
-                            pageId={row.id}
-                            isExpanded={isExpanded}
-                            onToggle={() => toggleRowExpanded(row.id)}
-                          />
-                        </td>
                       </tr>
                       {isExpanded && (
                         <tr className="bg-blue-50/30">

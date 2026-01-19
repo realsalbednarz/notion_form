@@ -22,14 +22,20 @@ interface CommentsPanelProps {
 export default function CommentsPanel({ pageId, collapsed = true }: CommentsPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start true to fetch initial count
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
 
-  // Fetch comments when expanded
+  // Fetch comments on mount to know if there are any
   useEffect(() => {
-    if (!isCollapsed && comments.length === 0 && !loading) {
+    fetchComments();
+  }, [pageId]);
+
+  // Also refetch when expanded (in case new comments were added elsewhere)
+  useEffect(() => {
+    if (!isCollapsed && initialFetchDone) {
       fetchComments();
     }
   }, [isCollapsed]);
@@ -45,11 +51,12 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
         throw new Error(data.error || 'Failed to fetch comments');
       }
 
-      setComments(data.comments);
+      setComments(data.comments || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load comments');
     } finally {
       setLoading(false);
+      setInitialFetchDone(true);
     }
   };
 
@@ -100,6 +107,45 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
     });
   };
 
+  // Show loading state while initial fetch is in progress
+  if (loading && !initialFetchDone) {
+    return (
+      <div className="border-t mt-6 pt-4">
+        <div className="text-sm text-gray-500">Loading comments...</div>
+      </div>
+    );
+  }
+
+  // If no comments exist, show a simple "No comments" message with add form
+  if (initialFetchDone && comments.length === 0) {
+    return (
+      <div className="border-t mt-6 pt-4">
+        <div className="text-sm font-medium text-gray-700 mb-3">Comments</div>
+        <div className="text-sm text-gray-500 mb-3">No comments yet</div>
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <button
+            type="submit"
+            disabled={!newComment.trim() || submitting}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? '...' : 'Add'}
+          </button>
+        </form>
+        {error && (
+          <div className="text-sm text-red-500 mt-2">{error}</div>
+        )}
+      </div>
+    );
+  }
+
+  // Show collapsible comments panel when comments exist
   return (
     <div className="border-t mt-6 pt-4">
       <button
@@ -115,11 +161,9 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
           <path d="M6 4l8 6-8 6V4z" />
         </svg>
         <span>Comments</span>
-        {comments.length > 0 && (
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-            {comments.length}
-          </span>
-        )}
+        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+          {comments.length}
+        </span>
       </button>
 
       {!isCollapsed && (
@@ -130,10 +174,6 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
 
           {error && (
             <div className="text-sm text-red-500">{error}</div>
-          )}
-
-          {!loading && !error && comments.length === 0 && (
-            <div className="text-sm text-gray-500">No comments yet</div>
           )}
 
           {/* Comments list */}

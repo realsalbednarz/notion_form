@@ -138,9 +138,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error.code === 'unauthorized') {
+    if (error.code === 'unauthorized' || error.code === 'restricted_resource' ||
+        (error.message && error.message.toLowerCase().includes('permission'))) {
       return NextResponse.json(
-        { error: 'Integration does not have permission to create comments. Enable "Insert comments" in your Notion integration settings.' },
+        { error: 'Integration does not have permission to create comments. Enable "Insert comments" in your Notion integration settings at https://www.notion.so/my-integrations' },
         { status: 403 }
       );
     }
