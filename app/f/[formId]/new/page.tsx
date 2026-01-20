@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import FormRenderer from '@/components/FormRenderer';
+import { ThemeToggle } from '@/components/ThemeProvider';
 import { FieldConfig } from '@/types/form';
 
 interface FormConfig {
@@ -127,8 +128,8 @@ export default function StandaloneCreatePage() {
   // Loading state
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Loading form...</div>
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+        <div className="text-gray-500 dark:text-gray-400">Loading form...</div>
       </main>
     );
   }
@@ -136,15 +137,15 @@ export default function StandaloneCreatePage() {
   // Error state
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-lg border p-8 text-center">
-            <div className="text-red-500 text-5xl mb-4">!</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Error</h1>
-            <p className="text-gray-600 mb-4">{error}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-8 text-center transition-colors">
+            <div className="text-red-500 dark:text-red-400 text-5xl mb-4">!</div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Error</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
             <Link
               href={`/f/${params.formId}`}
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
             >
               Go to form
             </Link>
@@ -163,16 +164,16 @@ export default function StandaloneCreatePage() {
   // Success state
   if (submitted) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-lg border p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-8 text-center transition-colors">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Success!</h1>
-            <p className="text-gray-600 mb-6">Your record has been created.</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Success!</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Your record has been created.</p>
 
             <div className="space-y-3">
               {createdPageUrl && (
@@ -191,7 +192,7 @@ export default function StandaloneCreatePage() {
                   setSubmitted(false);
                   setCreatedPageUrl(null);
                 }}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200 transition-colors"
               >
                 Create another
               </button>
@@ -199,7 +200,7 @@ export default function StandaloneCreatePage() {
               {allowList && (
                 <Link
                   href={`/f/${params.formId}`}
-                  className="block w-full px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-sm"
+                  className="block w-full px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors text-sm"
                 >
                   View all records
                 </Link>
@@ -213,24 +214,27 @@ export default function StandaloneCreatePage() {
 
   // Create form
   return (
-    <main className="min-h-screen bg-gray-50 py-8 px-4">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 transition-colors">
       <div className="max-w-2xl mx-auto">
-        {/* Back link if list is enabled */}
-        {allowList && (
-          <div className="mb-4">
+        {/* Header with back link and theme toggle */}
+        <div className="flex items-center justify-between mb-4">
+          {allowList ? (
             <Link
               href={`/f/${params.formId}`}
-              className="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 inline-flex items-center gap-1"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to list
             </Link>
-          </div>
-        )}
+          ) : (
+            <div />
+          )}
+          <ThemeToggle />
+        </div>
 
-        <div className="bg-white rounded-lg border p-6 md:p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 md:p-8 transition-colors">
           <FormRenderer
             name={createTitle || form.name}
             description={form.description || undefined}
@@ -241,7 +245,7 @@ export default function StandaloneCreatePage() {
           />
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
           Powered by Notion Form Builder
         </p>
       </div>

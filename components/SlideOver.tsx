@@ -62,15 +62,15 @@ export default function SlideOver({ isOpen, onClose, title, children }: SlideOve
           className="w-screen max-w-xl transform transition-transform duration-300 ease-in-out"
           style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
         >
-          <div className="flex h-full flex-col bg-white shadow-xl">
+          <div className="flex h-full flex-col bg-white dark:bg-gray-800 shadow-xl">
             {/* Header */}
-            <div className="flex items-center justify-between border-b px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between border-b dark:border-gray-700 px-6 py-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {title || 'Details'}
               </h2>
               <button
                 onClick={onClose}
-                className="rounded-md p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-md p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <span className="sr-only">Close panel</span>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -65,7 +65,7 @@ function TruncatedCell({ children }: { children: React.ReactNode }) {
       </div>
       {isHovered && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed p-3 bg-white border rounded-lg shadow-xl max-w-sm break-words whitespace-normal text-sm"
+          className="fixed p-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-sm break-words whitespace-normal text-sm dark:text-gray-200"
           style={{
             top: tooltipPos.top,
             left: tooltipPos.left,
@@ -86,7 +86,7 @@ function TruncatedCell({ children }: { children: React.ReactNode }) {
 // Format cell value for display
 function formatCellValue(type: string, value: any, expanded: boolean = false): React.ReactNode {
   if (value === null || value === undefined) {
-    return <span className="text-gray-400">-</span>;
+    return <span className="text-gray-400 dark:text-gray-500">-</span>;
   }
 
   switch (type) {
@@ -105,7 +105,7 @@ function formatCellValue(type: string, value: any, expanded: boolean = false): R
 
     case 'checkbox':
       return (
-        <span className={value ? 'text-green-600' : 'text-gray-400'}>
+        <span className={value ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}>
           {value ? '✓' : '✗'}
         </span>
       );
@@ -113,7 +113,7 @@ function formatCellValue(type: string, value: any, expanded: boolean = false): R
     case 'select':
     case 'status':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
           {String(value)}
         </span>
       );
@@ -125,7 +125,7 @@ function formatCellValue(type: string, value: any, expanded: boolean = false): R
             {value.map((v, i) => (
               <span
                 key={i}
-                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 {String(v)}
               </span>
@@ -143,7 +143,7 @@ function formatCellValue(type: string, value: any, expanded: boolean = false): R
           return <span>{String(value)}</span>;
         }
       }
-      return <span className="text-gray-400">-</span>;
+      return <span className="text-gray-400 dark:text-gray-500">-</span>;
 
     case 'people':
       if (Array.isArray(value) && value.length > 0) {
@@ -152,7 +152,7 @@ function formatCellValue(type: string, value: any, expanded: boolean = false): R
             {value.map((p: any, i: number) => (
               <span
                 key={i}
-                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200"
               >
                 {p.name || p.email || p.id}
               </span>
@@ -160,24 +160,50 @@ function formatCellValue(type: string, value: any, expanded: boolean = false): R
           </div>
         );
       }
-      return <span className="text-gray-400">-</span>;
+      return <span className="text-gray-400 dark:text-gray-500">-</span>;
 
     case 'created_time':
     case 'last_edited_time':
       if (value) {
         try {
-          return <span className="text-sm text-gray-600">{new Date(value).toLocaleString()}</span>;
+          return <span className="text-sm text-gray-600 dark:text-gray-400">{new Date(value).toLocaleString()}</span>;
         } catch {
           return <span>{String(value)}</span>;
         }
       }
-      return <span className="text-gray-400">-</span>;
+      return <span className="text-gray-400 dark:text-gray-500">-</span>;
 
     case 'relation':
       if (Array.isArray(value) && value.length > 0) {
-        return <span className="text-sm text-gray-600">{value.length} linked</span>;
+        // Check if we have titles (enriched data) or just IDs
+        const hasTitle = value[0] && typeof value[0] === 'object' && value[0].title;
+        if (hasTitle) {
+          return (
+            <div className="flex flex-wrap gap-1">
+              {value.slice(0, 3).map((item: any, i: number) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  {item.title}
+                </span>
+              ))}
+              {value.length > 3 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  +{value.length - 3} more
+                </span>
+              )}
+            </div>
+          );
+        }
+        // Just IDs - show count
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+            {value.length} linked
+          </span>
+        );
       }
-      return <span className="text-gray-400">-</span>;
+      return <span className="text-gray-400 dark:text-gray-500">-</span>;
 
     default:
       return <span>{String(value)}</span>;
@@ -409,18 +435,18 @@ export default function ListRenderer({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-        <p className="text-red-700">{error}</p>
+      <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+        <p className="text-red-700 dark:text-red-400">{error}</p>
         <button
           onClick={refresh}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+          className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
         >
           Try again
         </button>
@@ -436,43 +462,43 @@ export default function ListRenderer({
         <div className="relative" ref={columnMenuRef}>
           <button
             onClick={() => setShowColumnMenu(!showColumnMenu)}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
             </svg>
             Columns
             {hiddenColumns.size > 0 && (
-              <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+              <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
                 {columns.length - hiddenColumns.size}/{columns.length}
               </span>
             )}
           </button>
 
           {showColumnMenu && (
-            <div className="absolute left-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
-              <div className="px-3 py-2 text-xs font-medium text-gray-500 border-b">
+            <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
+              <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
                 Toggle columns
               </div>
               {columns.map(col => (
                 <label
                   key={col.propertyId}
-                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                 >
                   <input
                     type="checkbox"
                     checked={!hiddenColumns.has(col.propertyId)}
                     onChange={() => toggleColumnVisibility(col.propertyId)}
-                    className="h-4 w-4 text-blue-600 rounded"
+                    className="h-4 w-4 text-blue-600 rounded dark:bg-gray-700 dark:border-gray-600"
                   />
-                  <span className="text-sm text-gray-700">{col.label}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{col.label}</span>
                 </label>
               ))}
               {hiddenColumns.size > 0 && (
-                <div className="border-t mt-1 pt-1">
+                <div className="border-t dark:border-gray-700 mt-1 pt-1">
                   <button
                     onClick={() => setHiddenColumns(new Set())}
-                    className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-gray-50"
+                    className="w-full text-left px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     Show all columns
                   </button>
@@ -498,7 +524,7 @@ export default function ListRenderer({
 
       {/* No columns visible */}
       {visibleColumns.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 border rounded-lg border-dashed">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400 border dark:border-gray-700 rounded-lg border-dashed">
           {columns.length === 0 ? (
             <>
               <p className="font-medium">No columns configured</p>
@@ -516,16 +542,16 @@ export default function ListRenderer({
           )}
         </div>
       ) : rows.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 border rounded-lg">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400 border dark:border-gray-700 rounded-lg">
           <p>No records found</p>
           {filters.length > 0 && (
             <p className="text-sm mt-1">Try adjusting the filters</p>
           )}
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
+            <table className="w-full divide-y divide-gray-200 dark:divide-gray-700" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 {/* Expand arrow column */}
                 <col style={{ width: '24px' }} />
@@ -539,11 +565,11 @@ export default function ListRenderer({
                   />
                 ))}
               </colgroup>
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="py-2 text-left text-xs font-medium text-gray-500"></th>
+                  <th className="py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"></th>
                   {allowEdit && (
-                    <th className="py-2 text-left text-xs font-medium text-gray-500"></th>
+                    <th className="py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"></th>
                   )}
                   {visibleColumns.map((col) => {
                     const isSorted = sortConfig?.propertyId === col.propertyId;
@@ -551,12 +577,12 @@ export default function ListRenderer({
                     return (
                       <th
                         key={col.propertyId}
-                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate relative border-r border-gray-200 select-none"
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate relative border-r border-gray-200 dark:border-gray-700 select-none"
                         style={columnWidths[col.propertyId] ? { width: `${columnWidths[col.propertyId]}px` } : undefined}
                       >
                         <button
                           onClick={() => handleSortClick(col.propertyId)}
-                          className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+                          className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                           title={`Sort by ${col.label}`}
                         >
                           <span className="truncate">{col.label}</span>
@@ -594,17 +620,17 @@ export default function ListRenderer({
                   })}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {rows.map((row) => {
                   const isExpanded = expandedRows.has(row.id);
                   const colSpan = visibleColumns.length + 1 + (allowEdit ? 1 : 0);
                   return (
                     <React.Fragment key={row.id}>
-                      <tr className={`hover:bg-gray-50 ${isExpanded ? 'bg-blue-50/30' : ''}`}>
+                      <tr className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isExpanded ? 'bg-blue-50/30 dark:bg-blue-900/20' : ''}`}>
                         <td className="px-1 py-2 align-top">
                           <button
                             onClick={() => toggleRowExpanded(row.id)}
-                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                             title={isExpanded ? 'Collapse row' : 'Expand row'}
                           >
                             <svg
@@ -620,7 +646,7 @@ export default function ListRenderer({
                           <td className="px-1 py-2 align-top">
                             <button
                               onClick={() => onEditClick(row.id)}
-                              className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors whitespace-nowrap"
+                              className="px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded transition-colors whitespace-nowrap"
                             >
                               Edit
                             </button>
@@ -631,7 +657,7 @@ export default function ListRenderer({
                           return (
                             <td
                               key={col.propertyId}
-                              className="px-4 py-3 text-sm text-gray-900"
+                              className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100"
                             >
                               {prop ? formatCellValue(prop.type, prop.value, isExpanded) : '-'}
                             </td>
@@ -639,8 +665,8 @@ export default function ListRenderer({
                         })}
                       </tr>
                       {isExpanded && (
-                        <tr className="bg-blue-50/30">
-                          <td colSpan={colSpan} className="px-4 py-3 border-t border-blue-100">
+                        <tr className="bg-blue-50/30 dark:bg-blue-900/20">
+                          <td colSpan={colSpan} className="px-4 py-3 border-t border-blue-100 dark:border-blue-800">
                             <CommentPreview pageId={row.id} />
                           </td>
                         </tr>
@@ -660,7 +686,7 @@ export default function ListRenderer({
           <button
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
           >
             {loadingMore ? 'Loading...' : 'Load more'}
           </button>
@@ -669,7 +695,7 @@ export default function ListRenderer({
 
       {/* Row count */}
       {visibleColumns.length > 0 && (
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
           {rows.length} record{rows.length !== 1 ? 's' : ''}{hasMore ? '+' : ''} shown
         </div>
       )}

@@ -1,0 +1,11 @@
+TODO:
+
+- enable further expand comments in list view (top comment shown after expanding, then load more)
+- allow user to show/hide columns in list view
+- enable sorting in list view (single field sort)
+- enable standalone add form (enter from outside of list view)
+- vertical separators on columns in header of table in list view (show where the current edges of columns are so user can find them with their mouse)
+- color theme selector (by user), include dark theme(s)
+- make a user-facing directory of forms, discuss organization for this (can we do it automatically, by DB, or do we need admin to be able to configure)
+- remove front page from app and go straight to my forms if, a. integration is authorized, and b. there are forms. if !a, go to integration setup, if !b, go to create form page
+- add relation support - pull in relationships and columns from related table

@@ -6,6 +6,7 @@ import FormRenderer from '@/components/FormRenderer';
 import ListRenderer from '@/components/ListRenderer';
 import SlideOver from '@/components/SlideOver';
 import CommentsPanel from '@/components/CommentsPanel';
+import { ThemeToggle } from '@/components/ThemeProvider';
 import { FieldConfig, DesignTimeFilter, ListConfig } from '@/types/form';
 
 interface FormConfig {
@@ -264,8 +265,8 @@ export default function PublicFormPage() {
   // Loading state
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Loading form...</div>
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+        <div className="text-gray-500 dark:text-gray-400">Loading form...</div>
       </main>
     );
   }
@@ -273,12 +274,12 @@ export default function PublicFormPage() {
   // Error state
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-lg border p-8 text-center">
-            <div className="text-red-500 text-5xl mb-4">!</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Form Not Found</h1>
-            <p className="text-gray-600">{error}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-8 text-center transition-colors">
+            <div className="text-red-500 dark:text-red-400 text-5xl mb-4">!</div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Form Not Found</h1>
+            <p className="text-gray-600 dark:text-gray-400">{error}</p>
           </div>
         </div>
       </main>
@@ -294,16 +295,16 @@ export default function PublicFormPage() {
   // Success state for create-only forms
   if (submitted && !allowList) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-lg border p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-8 text-center transition-colors">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank you!</h1>
-            <p className="text-gray-600 mb-6">Your response has been submitted successfully.</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Thank you!</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Your response has been submitted successfully.</p>
             <button
               onClick={() => setSubmitted(false)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -321,18 +322,21 @@ export default function PublicFormPage() {
     const columns = getListColumns();
 
     return (
-      <main className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 md:px-8 transition-colors">
         <div className="w-full">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{listTitle || form.name}</h1>
-            {form.description && (
-              <p className="text-gray-600 mt-1">{form.description}</p>
-            )}
+          <div className="mb-6 flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{listTitle || form.name}</h1>
+              {form.description && (
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{form.description}</p>
+              )}
+            </div>
+            <ThemeToggle />
           </div>
 
           {/* List */}
-          <div className="bg-white rounded-lg border p-6 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 overflow-hidden transition-colors">
             <ListRenderer
               key={listKey}
               databaseId={form.databaseId}
@@ -346,7 +350,7 @@ export default function PublicFormPage() {
             />
           </div>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
+          <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
             Powered by Notion Form Builder
           </p>
         </div>
@@ -399,9 +403,12 @@ export default function PublicFormPage() {
 
   // Create-only mode (no list)
   return (
-    <main className="min-h-screen bg-gray-50 py-8 px-4">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 transition-colors">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg border p-6 md:p-8">
+        <div className="flex justify-end mb-4">
+          <ThemeToggle />
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 md:p-8 transition-colors">
           <FormRenderer
             name={createTitle || form.name}
             description={form.description || undefined}
@@ -411,7 +418,7 @@ export default function PublicFormPage() {
           />
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
           Powered by Notion Form Builder
         </p>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FieldConfig, DefaultValue } from '@/types/form';
+import RelationPicker from './RelationPicker';
 
 interface NotionUser {
   id: string;
@@ -206,9 +207,9 @@ export default function FormRenderer({
     const error = errors[field.notionPropertyId];
     const isDisabled = disabled || submitting || field.editable === false;
 
-    const inputClasses = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-      error ? 'border-red-300' : 'border-gray-300'
-    } ${isDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`;
+    const inputClasses = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 ${
+      error ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+    } ${isDisabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400' : ''}`;
 
     switch (field.notionPropertyType) {
       case 'title':
@@ -293,9 +294,9 @@ export default function FormRenderer({
                     }
                   }}
                   disabled={isDisabled}
-                  className="h-4 w-4 text-blue-600 rounded"
+                  className="h-4 w-4 text-blue-600 rounded dark:bg-gray-700 dark:border-gray-600"
                 />
-                <span className="text-sm">{opt.name}</span>
+                <span className="text-sm dark:text-gray-200">{opt.name}</span>
               </label>
             ))}
             {(!field.options || field.options.length === 0) && (
@@ -375,7 +376,7 @@ export default function FormRenderer({
               ))}
             </select>
             {usersLoading && (
-              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
                 Loading...
               </span>
             )}
@@ -406,7 +407,7 @@ export default function FormRenderer({
             type="text"
             value={value || '(auto-generated)'}
             disabled
-            className={`${inputClasses} bg-gray-100 text-gray-500`}
+            className={`${inputClasses} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
           />
         );
 
@@ -425,17 +426,34 @@ export default function FormRenderer({
             type="text"
             value={displayValue || '(auto-generated on save)'}
             disabled
-            className={`${inputClasses} bg-gray-100 text-gray-500`}
+            className={`${inputClasses} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
           />
         );
 
       case 'relation':
+        // If we have a relation database ID, use the picker component
+        if (field.relationDatabaseId) {
+          return (
+            <RelationPicker
+              databaseId={field.relationDatabaseId}
+              value={value || []}
+              onChange={(ids) => updateField(field.notionPropertyId, ids)}
+              multiple={true}
+              disabled={isDisabled}
+              placeholder={field.placeholder || 'Select related pages...'}
+            />
+          );
+        }
+        // Fallback to text input for page IDs if no database ID configured
         return (
           <input
             type="text"
-            value={value}
-            onChange={(e) => updateField(field.notionPropertyId, e.target.value)}
-            placeholder={field.placeholder || 'Enter related page ID'}
+            value={Array.isArray(value) ? value.join(', ') : value}
+            onChange={(e) => {
+              const ids = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+              updateField(field.notionPropertyId, ids);
+            }}
+            placeholder={field.placeholder || 'Enter page IDs (comma-separated)'}
             disabled={isDisabled}
             className={inputClasses}
           />
@@ -457,29 +475,29 @@ export default function FormRenderer({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="border-b pb-4">
-        <h1 className="text-2xl font-bold">{name}</h1>
+      <div className="border-b dark:border-gray-700 pb-4">
+        <h1 className="text-2xl font-bold dark:text-gray-100">{name}</h1>
         {description && (
-          <p className="text-gray-600 mt-1">{description}</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">{description}</p>
         )}
       </div>
 
       <div className="space-y-4">
         {visibleFields.map((field) => (
           <div key={field.notionPropertyId}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
+              {field.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
             </label>
 
             {renderField(field as FieldWithOptions)}
 
             {field.helpText && (
-              <p className="text-xs text-gray-500 mt-1">{field.helpText}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{field.helpText}</p>
             )}
 
             {errors[field.notionPropertyId] && (
-              <p className="text-xs text-red-500 mt-1">{errors[field.notionPropertyId]}</p>
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">{errors[field.notionPropertyId]}</p>
             )}
           </div>
         ))}

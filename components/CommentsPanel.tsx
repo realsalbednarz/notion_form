@@ -110,8 +110,8 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
   // Show loading state while initial fetch is in progress
   if (loading && !initialFetchDone) {
     return (
-      <div className="border-t mt-6 pt-4">
-        <div className="text-sm text-gray-500">Loading comments...</div>
+      <div className="border-t dark:border-gray-700 mt-6 pt-4">
+        <div className="text-sm text-gray-500 dark:text-gray-400">Loading comments...</div>
       </div>
     );
   }
@@ -119,9 +119,9 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
   // If no comments exist (or fetch failed), show add form
   if (comments.length === 0) {
     return (
-      <div className="border-t mt-6 pt-4">
-        <div className="text-sm font-medium text-gray-700 mb-3">Comments</div>
-        <div className="text-sm text-gray-500 mb-3">
+      <div className="border-t dark:border-gray-700 mt-6 pt-4">
+        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Comments</div>
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
           {fetchError ? 'Could not load comments' : 'No comments yet'}
         </div>
         <form onSubmit={handleSubmit} className="flex gap-2">
@@ -130,7 +130,7 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Add a comment..."
-            className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 px-3 py-2 text-sm border dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
           />
           <button
             type="submit"
@@ -146,11 +146,11 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
 
   // Show collapsible comments panel when comments exist
   return (
-    <div className="border-t mt-6 pt-4">
+    <div className="border-t dark:border-gray-700 mt-6 pt-4">
       <button
         type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 w-full"
+        className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 w-full"
       >
         <svg
           className={`w-4 h-4 transition-transform ${isCollapsed ? '' : 'rotate-90'}`}
@@ -160,7 +160,7 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
           <path d="M6 4l8 6-8 6V4z" />
         </svg>
         <span>Comments</span>
-        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+        <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
           {comments.length}
         </span>
       </button>
@@ -168,18 +168,18 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
       {!isCollapsed && (
         <div className="mt-4 space-y-4">
           {loading && (
-            <div className="text-sm text-gray-500">Loading comments...</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Loading comments...</div>
           )}
 
           {fetchError && (
-            <div className="text-sm text-gray-500">{fetchError}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">{fetchError}</div>
           )}
 
           {/* Comments list */}
           {comments.length > 0 && (
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {comments.map((comment) => (
-                <div key={comment.id} className="bg-gray-50 rounded-lg p-3">
+                <div key={comment.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-1">
                     {comment.createdBy.avatarUrl ? (
                       <img
@@ -188,18 +188,18 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
                         className="w-5 h-5 rounded-full"
                       />
                     ) : (
-                      <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">
+                      <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-600 dark:text-gray-300">
                         {comment.createdBy.name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="text-xs font-medium text-gray-700">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                       {comment.createdBy.name}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
                       {formatDate(comment.createdTime)}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                  <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                     {comment.plainText}
                   </p>
                 </div>
@@ -214,7 +214,7 @@ export default function CommentsPanel({ pageId, collapsed = true }: CommentsPane
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
-              className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-3 py-2 text-sm border dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
             />
             <button
               type="submit"
@@ -298,13 +298,13 @@ export function CommentPreview({ pageId }: { pageId: string }) {
   };
 
   if (loading) {
-    return <span className="text-xs text-gray-400">Loading...</span>;
+    return <span className="text-xs text-gray-400 dark:text-gray-500">Loading...</span>;
   }
 
   if (comments.length === 0) {
     return (
       <div>
-        <span className="text-xs text-gray-400 italic">No comments</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 italic">No comments</span>
         {expanded ? (
           <form onSubmit={handleSubmit} className="flex gap-2 mt-2">
             <input
@@ -312,7 +312,7 @@ export function CommentPreview({ pageId }: { pageId: string }) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
-              className="flex-1 px-2 py-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-2 py-1 text-xs border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
             />
             <button
               type="submit"
@@ -325,7 +325,7 @@ export function CommentPreview({ pageId }: { pageId: string }) {
         ) : (
           <button
             onClick={() => setExpanded(true)}
-            className="text-xs text-blue-600 hover:text-blue-800 ml-2"
+            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 ml-2"
           >
             Add comment
           </button>
@@ -341,8 +341,8 @@ export function CommentPreview({ pageId }: { pageId: string }) {
   if (!expanded) {
     return (
       <div className="text-xs">
-        <span className="text-gray-500">{latestComment.createdBy.name}: </span>
-        <span className="text-gray-700">
+        <span className="text-gray-500 dark:text-gray-400">{latestComment.createdBy.name}: </span>
+        <span className="text-gray-700 dark:text-gray-300">
           {latestComment.plainText.length > 100
             ? latestComment.plainText.substring(0, 100) + '...'
             : latestComment.plainText}
@@ -350,14 +350,14 @@ export function CommentPreview({ pageId }: { pageId: string }) {
         {count > 1 ? (
           <button
             onClick={() => setExpanded(true)}
-            className="text-blue-600 hover:text-blue-800 ml-2"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 ml-2"
           >
             View all ({count})
           </button>
         ) : (
           <button
             onClick={() => setExpanded(true)}
-            className="text-blue-600 hover:text-blue-800 ml-2"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 ml-2"
           >
             Reply
           </button>
@@ -370,10 +370,10 @@ export function CommentPreview({ pageId }: { pageId: string }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-600">All Comments ({count})</span>
+        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">All Comments ({count})</span>
         <button
           onClick={() => setExpanded(false)}
-          className="text-xs text-gray-500 hover:text-gray-700"
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           Collapse
         </button>
@@ -381,7 +381,7 @@ export function CommentPreview({ pageId }: { pageId: string }) {
 
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {comments.map((comment) => (
-          <div key={comment.id} className="bg-white rounded p-2 border border-gray-100">
+          <div key={comment.id} className="bg-white dark:bg-gray-700 rounded p-2 border border-gray-100 dark:border-gray-600">
             <div className="flex items-center gap-2 mb-1">
               {comment.createdBy.avatarUrl ? (
                 <img
@@ -390,18 +390,18 @@ export function CommentPreview({ pageId }: { pageId: string }) {
                   className="w-4 h-4 rounded-full"
                 />
               ) : (
-                <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center text-[10px] text-gray-600">
+                <div className="w-4 h-4 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-[10px] text-gray-600 dark:text-gray-300">
                   {comment.createdBy.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <span className="text-[10px] font-medium text-gray-700">
+              <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300">
                 {comment.createdBy.name}
               </span>
-              <span className="text-[10px] text-gray-400">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500">
                 {formatDate(comment.createdTime)}
               </span>
             </div>
-            <p className="text-xs text-gray-800 whitespace-pre-wrap">
+            <p className="text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
               {comment.plainText}
             </p>
           </div>
@@ -415,7 +415,7 @@ export function CommentPreview({ pageId }: { pageId: string }) {
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Add a comment..."
-          className="flex-1 px-2 py-1 text-xs border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          className="flex-1 px-2 py-1 text-xs border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
         />
         <button
           type="submit"

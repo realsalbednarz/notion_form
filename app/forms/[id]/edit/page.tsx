@@ -28,6 +28,7 @@ interface Property {
   name: string;
   type: string;
   options?: { id: string; name: string; color: string }[];
+  relation?: { database_id: string; synced_property_name?: string };
 }
 
 interface Database {
@@ -64,6 +65,7 @@ interface FieldConfigState extends Omit<FieldConfig, 'showInList'> {
   defaultValueType?: 'none' | 'static' | 'current_user' | 'current_date' | 'current_time';
   defaultValueStatic?: string;
   showInList: boolean;
+  relationDatabaseId?: string;
 }
 
 const TYPE_BADGES: Record<string, string> = {
@@ -481,6 +483,7 @@ export default function EditFormPage() {
               options: prop.options,
               defaultValueType,
               defaultValueStatic,
+              relationDatabaseId: sf.relationDatabaseId || prop.relation?.database_id,
             };
           });
 
@@ -500,6 +503,7 @@ export default function EditFormPage() {
             visible: true,
             showInList: true,
             options: prop.options,
+            relationDatabaseId: prop.relation?.database_id,
           }));
 
         setFields([...enabledFields, ...disabledFields]);

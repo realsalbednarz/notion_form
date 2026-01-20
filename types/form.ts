@@ -34,6 +34,8 @@ export const FieldConfigSchema = z.object({
   showInList: z.boolean().default(true),  // Show as column in list view (default: shown)
   defaultValue: DefaultValueSchema.optional(),
   relationPath: z.array(z.string()).optional(),
+  // For relation fields - the ID of the related database
+  relationDatabaseId: z.string().optional(),
   validation: z.object({
     min: z.number().optional(),
     max: z.number().optional(),
