@@ -99,10 +99,19 @@ export const DisplayTitlesSchema = z.object({
 
 export type DisplayTitles = z.infer<typeof DisplayTitlesSchema>;
 
+// Default sort configuration
+export const DefaultSortSchema = z.object({
+  propertyId: z.string(),
+  direction: z.enum(['ascending', 'descending']),
+});
+
+export type DefaultSort = z.infer<typeof DefaultSortSchema>;
+
 // List configuration for list-enabled forms
 export const ListConfigSchema = z.object({
   pageSize: z.number().default(20),
   filters: z.array(DesignTimeFilterSchema).default([]),
+  defaultSort: DefaultSortSchema.optional(),
 });
 
 export type ListConfig = z.infer<typeof ListConfigSchema>;

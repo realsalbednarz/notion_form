@@ -23,6 +23,7 @@ interface ListRendererProps {
   columns: ListColumn[];
   filters?: DesignTimeFilter[];
   pageSize?: number;
+  defaultSort?: { propertyId: string; direction: 'ascending' | 'descending' };
   allowEdit?: boolean;
   allowCreate?: boolean;
   onEditClick?: (rowId: string) => void;
@@ -215,6 +216,7 @@ export default function ListRenderer({
   columns,
   filters = [],
   pageSize = 20,
+  defaultSort,
   allowEdit = false,
   allowCreate = false,
   onEditClick,
@@ -249,7 +251,10 @@ export default function ListRenderer({
   const columnMenuRef = useRef<HTMLDivElement>(null);
 
   // Sorting state
-  const [sortConfig, setSortConfig] = useState<{ propertyId: string; direction: 'ascending' | 'descending' } | null>(null);
+  // Sorting state - initialize with defaultSort if provided
+  const [sortConfig, setSortConfig] = useState<{ propertyId: string; direction: 'ascending' | 'descending' } | null>(
+    defaultSort || null
+  );
 
   // Save hidden columns to localStorage when changed
   useEffect(() => {
@@ -582,14 +587,14 @@ export default function ListRenderer({
                       >
                         <button
                           onClick={() => handleSortClick(col.propertyId)}
-                          className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                          className="group flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                           title={`Sort by ${col.label}`}
                         >
                           <span className="truncate">{col.label}</span>
                           {/* Sort indicator */}
                           {isSorted ? (
                             <svg
-                              className={`w-3 h-3 flex-shrink-0 ${sortDirection === 'descending' ? 'rotate-180' : ''}`}
+                              className={`w-3 h-3 flex-shrink-0 text-blue-600 dark:text-blue-400 ${sortDirection === 'descending' ? 'rotate-180' : ''}`}
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -597,11 +602,11 @@ export default function ListRenderer({
                             </svg>
                           ) : (
                             <svg
-                              className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-30"
+                              className="w-3 h-3 flex-shrink-0 opacity-30 group-hover:opacity-60 transition-opacity"
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
-                              <path d="M5 10l5-5 5 5H5z" />
+                              <path d="M7 10l3-3 3 3H7zM7 10l3 3 3-3H7z" />
                             </svg>
                           )}
                         </button>

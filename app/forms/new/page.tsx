@@ -47,39 +47,39 @@ export default function NewFormPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <TopNav />
 
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold">Create New Form</h1>
-          <p className="text-gray-600 mt-1">Select a database to create a form for</p>
+          <h1 className="text-2xl font-bold dark:text-gray-100">Create New Form</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Select a database to create a form for</p>
         </div>
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="text-gray-500">Loading databases...</div>
+            <div className="text-gray-500 dark:text-gray-400">Loading databases...</div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
 
         {!loading && !error && databases.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border">
-            <div className="text-gray-400 text-5xl mb-4">📊</div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">No databases found</h2>
-            <p className="text-gray-500 mb-6">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
+            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">📊</div>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No databases found</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               Make sure your Notion integration has access to at least one database.
             </p>
             <a
               href="https://www.notion.so/my-integrations"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
             >
               Manage Notion Integrations
             </a>
@@ -87,7 +87,7 @@ export default function NewFormPage() {
         )}
 
         {!loading && !error && databases.length > 0 && (
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
             Don't see a database? In Notion, open the database page, click "..." menu, then "Connections" and add the Notion Form Builder integration.
           </p>
         )}
@@ -98,16 +98,16 @@ export default function NewFormPage() {
               <button
                 key={db.id}
                 onClick={() => handleSelectDatabase(db.id)}
-                className="block w-full text-left bg-white border rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                className="block w-full text-left bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold">{db.title}</h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h2 className="text-lg font-semibold dark:text-gray-100">{db.title}</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Last edited: {new Date(db.lastEditedTime).toLocaleDateString()}
                     </p>
                   </div>
-                  <span className="text-blue-600 text-sm font-medium">
+                  <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">
                     Select &rarr;
                   </span>
                 </div>

@@ -80,14 +80,14 @@ export default function DatabaseSchemaPage() {
   }, [params.id, router]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <TopNav />
 
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-6">
           <Link
             href="/forms/new"
-            className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline text-sm"
           >
             &larr; Back to New Form
           </Link>
@@ -95,12 +95,12 @@ export default function DatabaseSchemaPage() {
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="text-gray-500">Loading database schema...</div>
+            <div className="text-gray-500 dark:text-gray-400">Loading database schema...</div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
@@ -109,15 +109,15 @@ export default function DatabaseSchemaPage() {
           <>
             <div className="flex items-start justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-bold">{database.title}</h1>
-                <p className="text-sm text-gray-400 font-mono mt-1">{database.id}</p>
+                <h1 className="text-3xl font-bold dark:text-gray-100">{database.title}</h1>
+                <p className="text-sm text-gray-400 dark:text-gray-500 font-mono mt-1">{database.id}</p>
               </div>
               <div className="flex items-center gap-4">
                 <a
                   href={database.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                 >
                   Open in Notion
                 </a>
@@ -130,24 +130,24 @@ export default function DatabaseSchemaPage() {
               </div>
             </div>
 
-            <h2 className="text-xl font-semibold mb-4">
+            <h2 className="text-xl font-semibold dark:text-gray-100 mb-4">
               Properties ({database.properties.length})
             </h2>
 
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">Name</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">Type</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-700">Details</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">Name</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">Type</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-gray-700 bg-white dark:bg-gray-800/50">
                   {database.properties.map((prop) => (
-                    <tr key={prop.id} className="hover:bg-gray-50">
+                    <tr key={prop.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="px-4 py-3">
-                        <span className="font-medium">{prop.name}</span>
+                        <span className="font-medium dark:text-gray-100">{prop.name}</span>
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -158,19 +158,19 @@ export default function DatabaseSchemaPage() {
                           {prop.type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                         {prop.options && (
                           <div className="flex flex-wrap gap-1">
                             {prop.options.slice(0, 5).map((opt) => (
                               <span
                                 key={opt.id}
-                                className="inline-block px-2 py-0.5 bg-gray-100 rounded text-xs"
+                                className="inline-block px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs dark:text-gray-300"
                               >
                                 {opt.name}
                               </span>
                             ))}
                             {prop.options.length > 5 && (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
                                 +{prop.options.length - 5} more
                               </span>
                             )}

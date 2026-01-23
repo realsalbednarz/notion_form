@@ -54,6 +54,7 @@ interface FormConfigData {
     listConfig?: {
       pageSize?: number;
       filters?: DesignTimeFilter[];
+      defaultSort?: { propertyId: string; direction: 'ascending' | 'descending' };
     };
   };
 }
@@ -127,13 +128,13 @@ function SortableFieldItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-blue-300 bg-blue-50/50 rounded-lg transition-all"
+      className="border border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg transition-all"
     >
       <div className="flex items-center gap-3 p-3">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded touch-none"
+          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded touch-none"
           title="Drag to reorder"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +147,7 @@ function SortableFieldItem({
           onChange={onToggle}
           className="h-4 w-4 text-blue-600 rounded"
         />
-        <span className="font-medium flex-1">{field.originalName}</span>
+        <span className="font-medium flex-1 dark:text-gray-100">{field.originalName}</span>
         <span
           className={`px-2 py-0.5 rounded text-xs font-medium ${
             TYPE_BADGES[field.notionPropertyType] || 'bg-gray-100 text-gray-800'
@@ -156,52 +157,52 @@ function SortableFieldItem({
         </span>
         <button
           onClick={onExpand}
-          className="text-gray-400 hover:text-gray-600 px-2"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2"
         >
           {expanded ? '▼' : '▶'}
         </button>
       </div>
 
       {expanded && (
-        <div className="px-3 pb-3 pt-1 border-t bg-white space-y-3">
+        <div className="px-3 pb-3 pt-1 border-t dark:border-gray-700 bg-white dark:bg-gray-800 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Label
             </label>
             <input
               type="text"
               value={field.label}
               onChange={(e) => onUpdate({ label: e.target.value })}
-              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Placeholder
             </label>
             <input
               type="text"
               value={field.placeholder || ''}
               onChange={(e) => onUpdate({ placeholder: e.target.value })}
-              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Help Text
             </label>
             <input
               type="text"
               value={field.helpText || ''}
               onChange={(e) => onUpdate({ helpText: e.target.value })}
-              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
             />
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm dark:text-gray-200">
               <input
                 type="checkbox"
                 checked={field.required}
@@ -211,7 +212,7 @@ function SortableFieldItem({
               Required
             </label>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm dark:text-gray-200">
               <input
                 type="checkbox"
                 checked={field.visible}
@@ -221,7 +222,7 @@ function SortableFieldItem({
               Show in Add/Edit
             </label>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm dark:text-gray-200">
               <input
                 type="checkbox"
                 checked={field.showInList}
@@ -232,8 +233,8 @@ function SortableFieldItem({
             </label>
           </div>
 
-          <div className="border-t pt-3 mt-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+          <div className="border-t dark:border-gray-700 pt-3 mt-3">
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Default Value
             </label>
             <select
@@ -242,7 +243,7 @@ function SortableFieldItem({
                 defaultValueType: e.target.value as any,
                 defaultValueStatic: e.target.value === 'static' ? field.defaultValueStatic : undefined
               })}
-              className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
             >
               <option value="none">No default</option>
               <option value="static">Static value</option>
@@ -262,7 +263,7 @@ function SortableFieldItem({
                 <select
                   value={field.defaultValueStatic || ''}
                   onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
-                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                  className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 mt-2 bg-white dark:bg-gray-700 dark:text-gray-100"
                 >
                   <option value="">Select default option...</option>
                   {field.options.map((opt) => (
@@ -273,7 +274,7 @@ function SortableFieldItem({
                 <select
                   value={field.defaultValueStatic || ''}
                   onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
-                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                  className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 mt-2 bg-white dark:bg-gray-700 dark:text-gray-100"
                 >
                   <option value="">Select default option...</option>
                   {field.options.map((opt) => (
@@ -286,19 +287,19 @@ function SortableFieldItem({
                   value={field.defaultValueStatic || ''}
                   onChange={(e) => onUpdate({ defaultValueStatic: e.target.value })}
                   placeholder="Enter default value"
-                  className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 mt-2"
+                  className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 mt-2 bg-white dark:bg-gray-700 dark:text-gray-100"
                 />
               )
             )}
 
             {field.defaultValueType === 'current_user' && (
-              <p className="text-xs text-gray-500 mt-1">Will be set to the logged-in user</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Will be set to the logged-in user</p>
             )}
             {field.defaultValueType === 'current_date' && (
-              <p className="text-xs text-gray-500 mt-1">Will be set to today's date</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Will be set to today's date</p>
             )}
             {field.defaultValueType === 'current_time' && (
-              <p className="text-xs text-gray-500 mt-1">Will be set to current date and time</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Will be set to current date and time</p>
             )}
           </div>
         </div>
@@ -317,7 +318,7 @@ function AvailableFieldItem({
 }) {
   return (
     <div
-      className="border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-all"
+      className="border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:border-gray-300 dark:hover:border-gray-500 transition-all"
       onClick={onToggle}
     >
       <div className="flex items-center gap-3 p-3">
@@ -327,7 +328,7 @@ function AvailableFieldItem({
           onChange={() => {}}
           className="h-4 w-4 text-blue-600 rounded"
         />
-        <span className="font-medium flex-1 text-gray-600">{field.originalName}</span>
+        <span className="font-medium flex-1 text-gray-600 dark:text-gray-400">{field.originalName}</span>
         <span
           className={`px-2 py-0.5 rounded text-xs font-medium ${
             TYPE_BADGES[field.notionPropertyType] || 'bg-gray-100 text-gray-800'
@@ -367,6 +368,8 @@ export default function EditFormPage() {
   // List config state
   const [listPageSize, setListPageSize] = useState(20);
   const [listFilters, setListFilters] = useState<DesignTimeFilter[]>([]);
+  const [defaultSortField, setDefaultSortField] = useState<string>('');
+  const [defaultSortDirection, setDefaultSortDirection] = useState<'ascending' | 'descending'>('descending');
 
   // Display titles state
   const [listTitle, setListTitle] = useState('');
@@ -420,6 +423,10 @@ export default function EditFormPage() {
         const listConfig = formData.form.config.listConfig || {};
         setListPageSize(listConfig.pageSize || 20);
         setListFilters(listConfig.filters || []);
+        if (listConfig.defaultSort) {
+          setDefaultSortField(listConfig.defaultSort.propertyId);
+          setDefaultSortDirection(listConfig.defaultSort.direction);
+        }
 
         // Load display titles with sensible defaults
         const displayTitles = formData.form.config.displayTitles || {};
@@ -571,6 +578,10 @@ export default function EditFormPage() {
     listConfig: allowList ? {
       pageSize: listPageSize,
       filters: listFilters,
+      defaultSort: defaultSortField ? {
+        propertyId: defaultSortField,
+        direction: defaultSortDirection,
+      } : undefined,
     } : undefined,
     displayTitles: {
       listTitle: listTitle || undefined,
@@ -625,21 +636,21 @@ export default function EditFormPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <TopNav />
 
       <div className="max-w-6xl mx-auto p-8">
         <div className="mb-6 flex items-center justify-between">
           <Link
             href="/forms"
-            className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline text-sm"
           >
             &larr; Back to Forms
           </Link>
           {database && (
             <button
               onClick={() => setShowSchema(!showSchema)}
-              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
             >
               {showSchema ? 'Hide' : 'View'} Schema
               <span className="text-xs">{showSchema ? '▲' : '▼'}</span>
@@ -678,19 +689,19 @@ export default function EditFormPage() {
         )}
 
         {showSchema && database && (
-          <div className="mb-6 bg-white rounded-lg border p-4">
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 transition-colors">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-gray-900">Database Schema: {database.title}</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100">Database Schema: {database.title}</h3>
               <a
                 href={database.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 Open in Notion
               </a>
             </div>
-            <div className="text-xs text-gray-500 mb-2">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               {database.properties.length} properties
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -712,12 +723,12 @@ export default function EditFormPage() {
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="text-gray-500">Loading...</div>
+            <div className="text-gray-500 dark:text-gray-400">Loading...</div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
@@ -726,37 +737,37 @@ export default function EditFormPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Panel - Configuration */}
             <div>
-              <div className="bg-white rounded-lg border p-6 mb-6">
-                <h1 className="text-2xl font-bold mb-6">Edit Form</h1>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 mb-6 transition-colors">
+                <h1 className="text-2xl font-bold dark:text-gray-100 mb-6">Edit Form</h1>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Form Name
                     </label>
                     <input
                       type="text"
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Description (optional)
                     </label>
                     <textarea
                       value={formDescription}
                       onChange={(e) => setFormDescription(e.target.value)}
                       rows={2}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                     />
                   </div>
 
                   {/* Capabilities */}
-                  <div className="border-t pt-4 mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <div className="border-t dark:border-gray-700 pt-4 mt-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                       Form Capabilities
                     </label>
                     <div className="space-y-2">
@@ -767,8 +778,8 @@ export default function EditFormPage() {
                           onChange={(e) => setAllowList(e.target.checked)}
                           className="h-4 w-4 text-blue-600 rounded"
                         />
-                        <span className="text-sm">Show list view</span>
-                        <span className="text-xs text-gray-500">(display records in a table)</span>
+                        <span className="text-sm dark:text-gray-200">Show list view</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">(display records in a table)</span>
                       </label>
                       <label className="flex items-center gap-2">
                         <input
@@ -777,8 +788,8 @@ export default function EditFormPage() {
                           onChange={(e) => setAllowCreate(e.target.checked)}
                           className="h-4 w-4 text-blue-600 rounded"
                         />
-                        <span className="text-sm">Allow create</span>
-                        <span className="text-xs text-gray-500">(add new records)</span>
+                        <span className="text-sm dark:text-gray-200">Allow create</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">(add new records)</span>
                       </label>
                       <label className="flex items-center gap-2">
                         <input
@@ -787,21 +798,21 @@ export default function EditFormPage() {
                           onChange={(e) => setAllowEdit(e.target.checked)}
                           className="h-4 w-4 text-blue-600 rounded"
                         />
-                        <span className="text-sm">Allow edit</span>
-                        <span className="text-xs text-gray-500">(modify existing records)</span>
+                        <span className="text-sm dark:text-gray-200">Allow edit</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">(modify existing records)</span>
                       </label>
                     </div>
                   </div>
 
                   {/* List Config */}
                   {allowList && (
-                    <div className="border-t pt-4 mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <div className="border-t dark:border-gray-700 pt-4 mt-4">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         List Settings
                       </label>
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                             Page Size
                           </label>
                           <input
@@ -810,10 +821,39 @@ export default function EditFormPage() {
                             max={100}
                             value={listPageSize}
                             onChange={(e) => setListPageSize(Math.max(1, Math.min(100, parseInt(e.target.value) || 20)))}
-                            className="w-24 px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                            className="w-24 px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                           />
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            Default Sort
+                          </label>
+                          <div className="flex gap-2">
+                            <select
+                              value={defaultSortField}
+                              onChange={(e) => setDefaultSortField(e.target.value)}
+                              className="flex-1 px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                            >
+                              <option value="">No default sort</option>
+                              {enabledFields.filter(f => f.showInList).map(f => (
+                                <option key={f.notionPropertyId} value={f.notionPropertyId}>
+                                  {f.label}
+                                </option>
+                              ))}
+                            </select>
+                            {defaultSortField && (
+                              <select
+                                value={defaultSortDirection}
+                                onChange={(e) => setDefaultSortDirection(e.target.value as 'ascending' | 'descending')}
+                                className="px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                              >
+                                <option value="ascending">Ascending</option>
+                                <option value="descending">Descending</option>
+                              </select>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           Enable "Show in List" on fields below to choose which columns appear in the table.
                         </p>
                       </div>
@@ -821,17 +861,17 @@ export default function EditFormPage() {
                   )}
 
                   {/* Display Titles */}
-                  <div className="border-t pt-4 mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <div className="border-t dark:border-gray-700 pt-4 mt-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                       Display Titles
                     </label>
-                    <p className="text-xs text-gray-500 mb-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
                       Customize the titles shown in different views. Leave blank to use the form name.
                     </p>
                     <div className="space-y-3">
                       {allowList && (
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                             List View Title
                           </label>
                           <input
@@ -839,13 +879,13 @@ export default function EditFormPage() {
                             value={listTitle}
                             onChange={(e) => setListTitle(e.target.value)}
                             placeholder={formName || 'List title...'}
-                            className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                           />
                         </div>
                       )}
                       {allowCreate && (
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                             Create Form Title
                           </label>
                           <input
@@ -853,13 +893,13 @@ export default function EditFormPage() {
                             value={createTitle}
                             onChange={(e) => setCreateTitle(e.target.value)}
                             placeholder={allowList ? 'Create New Record' : formName || 'Create title...'}
-                            className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                           />
                         </div>
                       )}
                       {allowEdit && (
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                             Edit Form Title
                           </label>
                           <input
@@ -867,7 +907,7 @@ export default function EditFormPage() {
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
                             placeholder="Edit Record"
-                            className="w-full px-2 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                           />
                         </div>
                       )}
@@ -876,14 +916,14 @@ export default function EditFormPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg border p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 transition-colors">
                 {/* Selected Fields - Draggable */}
-                <h2 className="text-lg font-semibold mb-4">
+                <h2 className="text-lg font-semibold dark:text-gray-100 mb-4">
                   Selected Fields ({enabledFields.length})
                 </h2>
 
                 {enabledFields.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-lg mb-6">
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-500 border-2 border-dashed dark:border-gray-600 rounded-lg mb-6">
                     Select fields from below to add to your form
                   </div>
                 ) : (
@@ -917,7 +957,7 @@ export default function EditFormPage() {
                 {/* Available Fields */}
                 {disabledFields.length > 0 && (
                   <>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3 mt-6">
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 mt-6">
                       Available Fields ({disabledFields.length})
                     </h3>
                     <div className="space-y-2">
@@ -936,14 +976,14 @@ export default function EditFormPage() {
 
             {/* Right Panel - Preview */}
             <div>
-              <div className="bg-white rounded-lg border p-6 sticky top-20">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 sticky top-20 transition-colors">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold">Preview</h2>
+                  <h2 className="text-lg font-semibold dark:text-gray-100">Preview</h2>
                   <div className="flex gap-2">
                     <button
                       onClick={handlePreview}
                       disabled={enabledFields.length === 0 || !formName.trim()}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Test Form
                     </button>
@@ -958,23 +998,23 @@ export default function EditFormPage() {
                 </div>
 
                 {enabledFields.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     Select fields to see preview
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="border-b pb-4 mb-4">
-                      <h3 className="text-xl font-bold">{formName || 'Untitled Form'}</h3>
+                    <div className="border-b dark:border-gray-700 pb-4 mb-4">
+                      <h3 className="text-xl font-bold dark:text-gray-100">{formName || 'Untitled Form'}</h3>
                       {formDescription && (
-                        <p className="text-gray-600 text-sm mt-1">{formDescription}</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{formDescription}</p>
                       )}
                     </div>
 
                     {enabledFields.filter(f => f.visible).map((field) => (
                       <div key={field.notionPropertyId}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           {field.label}
-                          {field.required && <span className="text-red-500 ml-1">*</span>}
+                          {field.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                         </label>
 
                         {field.notionPropertyType === 'checkbox' ? (
@@ -988,61 +1028,61 @@ export default function EditFormPage() {
                             type="text"
                             placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         ) : field.notionPropertyType === 'number' ? (
                           <input
                             type="number"
                             placeholder={field.placeholder || '0'}
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         ) : field.notionPropertyType === 'select' || field.notionPropertyType === 'status' ? (
-                          <select disabled className="w-full px-3 py-2 border rounded-lg bg-gray-50">
+                          <select disabled className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <option>{field.placeholder || `Select ${field.label.toLowerCase()}`}</option>
                           </select>
                         ) : field.notionPropertyType === 'multi_select' ? (
-                          <div className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-400">
+                          <div className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
                             {field.placeholder || 'Select multiple options...'}
                           </div>
                         ) : field.notionPropertyType === 'date' ? (
                           <input
                             type="date"
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         ) : field.notionPropertyType === 'url' ? (
                           <input
                             type="url"
                             placeholder={field.placeholder || 'https://'}
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         ) : field.notionPropertyType === 'email' ? (
                           <input
                             type="email"
                             placeholder={field.placeholder || 'email@example.com'}
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         ) : field.notionPropertyType === 'phone_number' ? (
                           <input
                             type="tel"
                             placeholder={field.placeholder || '+1 (555) 000-0000'}
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         ) : (
                           <input
                             type="text"
                             placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
                             disabled
-                            className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+                            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-300"
                           />
                         )}
 
                         {field.helpText && (
-                          <p className="text-xs text-gray-500 mt-1">{field.helpText}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{field.helpText}</p>
                         )}
                       </div>
                     ))}

@@ -52,42 +52,42 @@ export default function SettingsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <TopNav />
 
       <div className="max-w-2xl mx-auto p-8">
-        <h1 className="text-2xl font-bold mb-8">Settings</h1>
+        <h1 className="text-2xl font-bold dark:text-gray-100 mb-8">Settings</h1>
 
         {loading ? (
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 transition-colors">
             <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-10 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
             </div>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Notion Connection */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-lg font-semibold mb-4">Notion Connection</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 transition-colors">
+              <h2 className="text-lg font-semibold dark:text-gray-100 mb-4">Notion Connection</h2>
 
               {user ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-green-900">Connected to Notion</p>
-                      <p className="text-sm text-green-700">
+                      <p className="font-medium text-green-900 dark:text-green-300">Connected to Notion</p>
+                      <p className="text-sm text-green-700 dark:text-green-400">
                         Workspace: {user.workspaceName || 'Unknown'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="border rounded-lg divide-y">
+                  <div className="border dark:border-gray-700 rounded-lg divide-y dark:divide-gray-700">
                     <div className="p-4 flex items-center gap-4">
                       {user.avatarUrl ? (
                         <img
@@ -101,12 +101,12 @@ export default function SettingsPage() {
                         </div>
                       )}
                       <div>
-                        <p className="font-medium">{user.name || 'User'}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                        <p className="font-medium dark:text-gray-100">{user.name || 'User'}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                       </div>
                     </div>
                     <div className="p-4">
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Connected on {new Date().toLocaleDateString()}
                       </p>
                     </div>
@@ -114,14 +114,14 @@ export default function SettingsPage() {
 
                   <button
                     onClick={handleDisconnect}
-                    className="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                    className="w-full px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium"
                   >
                     Disconnect from Notion
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     Connect your Notion workspace to create and manage forms for your databases.
                   </p>
                   <button
@@ -138,11 +138,11 @@ export default function SettingsPage() {
             </div>
 
             {/* About Section */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-lg font-semibold mb-4">About</h2>
-              <div className="text-sm text-gray-600 space-y-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6 transition-colors">
+              <h2 className="text-lg font-semibold dark:text-gray-100 mb-4">About</h2>
+              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
                 <p>Notion Form Builder lets you create custom forms that submit directly to your Notion databases.</p>
-                <p className="text-gray-400">Version 1.0.0</p>
+                <p className="text-gray-400 dark:text-gray-500">Version 1.0.0</p>
               </div>
             </div>
           </div>

@@ -120,7 +120,16 @@ export default function FormRenderer({
   useEffect(() => {
     const defaults = computeAllDefaults(fields, currentUser);
     if (Object.keys(defaults).length > 0) {
-      setFormData(prev => ({ ...defaults, ...prev }));
+      setFormData(prev => {
+        const updated = { ...prev };
+        // Only apply defaults to fields that are empty/undefined
+        for (const [key, value] of Object.entries(defaults)) {
+          if (prev[key] === undefined || prev[key] === '' || prev[key] === null) {
+            updated[key] = value;
+          }
+        }
+        return updated;
+      });
     }
   }, [fields, currentUser]);
 

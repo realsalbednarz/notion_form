@@ -39,6 +39,7 @@ export async function GET(
       type: prop.type,
       ...(prop.type === 'select' && { options: prop.select?.options }),
       ...(prop.type === 'multi_select' && { options: prop.multi_select?.options }),
+      ...(prop.type === 'status' && { options: prop.status?.options }),
       ...(prop.type === 'relation' && { relation: prop.relation }),
       ...(prop.type === 'rollup' && { rollup: prop.rollup }),
       ...(prop.type === 'formula' && { formula: prop.formula }),

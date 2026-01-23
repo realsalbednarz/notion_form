@@ -79,12 +79,12 @@ export default function FormsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <TopNav />
 
       <div className="max-w-6xl mx-auto p-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">My Forms</h1>
+          <h1 className="text-2xl font-bold dark:text-gray-100">My Forms</h1>
           <Link
             href="/forms/new"
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -95,21 +95,21 @@ export default function FormsPage() {
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="text-gray-500">Loading...</div>
+            <div className="text-gray-500 dark:text-gray-400">Loading...</div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
 
         {!loading && !error && forms.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border">
-            <div className="text-gray-400 text-5xl mb-4">📝</div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">No forms yet</h2>
-            <p className="text-gray-500 mb-6">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
+            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">📝</div>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No forms yet</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               Create your first form by selecting a database
             </p>
             <Link
@@ -122,42 +122,42 @@ export default function FormsPage() {
         )}
 
         {!loading && !error && forms.length > 0 && (
-          <div className="bg-white rounded-lg border overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
                 <tr>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
                     Name
                   </th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
                     Updated
                   </th>
-                  <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
+                  <th className="text-right px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:divide-gray-700">
                 {forms.map((form) => (
-                  <tr key={form.id} className="hover:bg-gray-50">
+                  <tr key={form.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-4 py-3">
                       <div>
-                        <div className="font-medium text-gray-900">{form.name}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{form.name}</div>
                         {form.description && (
-                          <div className="text-sm text-gray-500 truncate max-w-md">
+                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-md">
                             {form.description}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(form.updatedAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => copyFormUrl(form.id)}
-                          className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                          className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                           title="Copy form URL"
                         >
                           Copy Link
@@ -165,20 +165,20 @@ export default function FormsPage() {
                         <Link
                           href={`/f/${form.id}`}
                           target="_blank"
-                          className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                          className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
                         >
                           Open
                         </Link>
                         <Link
                           href={`/forms/${form.id}/edit`}
-                          className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                          className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                         >
                           Edit
                         </Link>
                         <button
                           onClick={() => handleDelete(form.id, form.name)}
                           disabled={deleting === form.id}
-                          className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
+                          className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 rounded disabled:opacity-50"
                         >
                           {deleting === form.id ? 'Deleting...' : 'Delete'}
                         </button>

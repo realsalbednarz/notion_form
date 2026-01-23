@@ -60,12 +60,12 @@ function LoginContent() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white rounded-lg border shadow-sm p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 shadow-sm p-8 transition-colors">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2">Notion Form Builder</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold dark:text-gray-100 mb-2">Notion Form Builder</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               {authMode === 'oauth'
                 ? 'Connect your Notion workspace to create forms'
                 : 'Sign in to manage your forms'}
@@ -73,15 +73,15 @@ function LoginContent() {
           </div>
 
           {(error || loginError) && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-700 dark:text-red-400 text-sm">
                 {loginError || ERROR_MESSAGES[error!] || message || 'An error occurred'}
               </p>
             </div>
           )}
 
           {authMode === 'loading' && (
-            <div className="text-center py-4 text-gray-500">Loading...</div>
+            <div className="text-center py-4 text-gray-500 dark:text-gray-400">Loading...</div>
           )}
 
           {authMode === 'oauth' && (
@@ -114,7 +114,7 @@ function LoginContent() {
           {authMode === 'password' && (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Admin Password
                 </label>
                 <input
@@ -122,7 +122,7 @@ function LoginContent() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                   placeholder="Enter admin password"
                   required
                 />
@@ -141,7 +141,7 @@ function LoginContent() {
           <div className="mt-6 text-center">
             <Link
               href="/"
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               &larr; Back to Home
             </Link>
@@ -149,7 +149,7 @@ function LoginContent() {
         </div>
 
         {authMode === 'oauth' && (
-          <p className="mt-6 text-center text-xs text-gray-500">
+          <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
             By connecting, you allow this app to access your Notion databases.
           </p>
         )}
@@ -161,8 +161,8 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Loading...</div>
+      <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </main>
     }>
       <LoginContent />

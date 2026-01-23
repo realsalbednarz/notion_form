@@ -343,6 +343,7 @@ export default function PublicFormPage() {
               columns={columns}
               filters={listConfig?.filters || []}
               pageSize={listConfig?.pageSize || 20}
+              defaultSort={listConfig?.defaultSort}
               allowEdit={allowEdit}
               allowCreate={allowCreate}
               onEditClick={openEdit}
